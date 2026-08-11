@@ -190,6 +190,7 @@ code {
   color: var(--text-dim);
 }
 .import-row-fields label.span-2 { grid-column: span 2; }
+.import-row-fields label.span-3 { grid-column: span 3; }
 
 .rules-text-label {
   display: flex;
@@ -203,6 +204,7 @@ code {
 @media (max-width: 640px) {
   .import-row-fields { grid-template-columns: 1fr 1fr; }
   .import-row-fields label.span-2 { grid-column: span 2; }
+  .import-row-fields label.span-3 { grid-column: span 2; }
 }
 
 .convert-card {

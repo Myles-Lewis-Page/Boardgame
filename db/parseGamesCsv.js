@@ -38,7 +38,7 @@ function parseCsvText(text) {
 
 const EXPECTED_HEADERS = [
   'name', 'publisher', 'genre', 'min_players', 'max_players',
-  'play_time_minutes', 'cover_image_url', 'notes', 'rules_text'
+  'play_time_minutes', 'cover_image_url', 'notes', 'rules_text', 'expansion_of'
 ];
 
 /**
@@ -88,6 +88,7 @@ function parseGamesCsv(rawText) {
       notes: raw.notes || '',
       rules_text: raw.rules_text || '',
       detected_section_count: raw.rules_text ? parseRulebook(raw.rules_text).length : 0,
+      expansion_of: raw.expansion_of || '',
       errors
     };
   });
@@ -95,7 +96,7 @@ function parseGamesCsv(rawText) {
   return { headers: headerRow, games, headerError: null };
 }
 
-const CSV_TEMPLATE = `name,publisher,genre,min_players,max_players,play_time_minutes,cover_image_url,notes,rules_text
+const CSV_TEMPLATE = `name,publisher,genre,min_players,max_players,play_time_minutes,cover_image_url,notes,rules_text,expansion_of
 Catan,Kosmos,Strategy,3,4,90,,Base game plus Seafarers expansion,"SETUP
 Place the board in the middle of the table. Give each player 2 wood and 2 brick.
 
@@ -103,9 +104,10 @@ BUILDING ROADS
 Roads cost 1 wood and 1 brick. You must connect to an existing road or settlement.
 
 TRADING
-You may trade with other players or the bank at a 4:1 ratio."
-Dominion,Rio Grande Games,Deck Building,2,4,45,,,
-Ticket to Ride,Days of Wonder,Family,2,5,60,,,
+You may trade with other players or the bank at a 4:1 ratio.",
+Catan: Seafarers,Kosmos,Strategy,3,4,90,,Adds ships and islands,,Catan
+Dominion,Rio Grande Games,Deck Building,2,4,45,,,,
+Ticket to Ride,Days of Wonder,Family,2,5,60,,,,
 `;
 
 module.exports = { parseCsvText, parseGamesCsv, EXPECTED_HEADERS, CSV_TEMPLATE };

@@ -4,13 +4,19 @@
 <h1>Import Games</h1>
 <p class="hint">
   Upload or paste a CSV to add many games at once. Columns:
-  <code>name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, rules_text</code>
+  <code>name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, rules_text, expansion_of</code>
   &mdash; only <code>name</code> is required, leave the rest blank if you don't have it.
 </p>
 <p class="hint">
   <code>rules_text</code> is optional: paste the full rulebook text for that game (wrap it in double quotes
   in the CSV so line breaks survive) and it'll be auto-split into rule sections the same way the
-  "Paste Rulebook Text" feature does. You'll get a preview to fix anything before it's saved.
+  "Paste Rulebook Text" feature does.
+</p>
+<p class="hint">
+  <code>expansion_of</code> is optional: put the exact name of the parent game to add that row as an
+  expansion instead of a standalone game. The parent can already exist in your collection, or be another
+  row earlier or later in the same file, either works. Leave it blank for a standalone game. You'll get a
+  preview to fix anything before it's saved.
 </p>
 <p><a href="/games/import/template" class="btn btn-small btn-secondary">Download starter template.csv</a></p>
 
