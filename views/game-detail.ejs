@@ -2,24 +2,31 @@
 
 <p><a href="/games">&larr; All games</a></p>
 
-<div class="game-header">
-  <h1><%= game.name %></h1>
-  <% if (isAdmin) { %>
-  <div class="game-actions">
-    <button class="btn btn-small" onclick="document.getElementById('edit-game').classList.toggle('hidden')">Edit Info</button>
-    <form method="POST" action="/games/<%= game.id %>/delete" onsubmit="return confirm('Delete this game and all its rules?')">
-      <button type="submit" class="btn btn-small btn-danger">Delete Game</button>
-    </form>
-  </div>
+<div class="game-header-row">
+  <% if (game.cover_image_url) { %>
+    <img class="box-art" src="<%= game.cover_image_url %>" alt="<%= game.name %> box art">
   <% } %>
+  <div class="game-header-info">
+    <div class="game-header">
+      <h1><%= game.name %></h1>
+      <% if (isAdmin) { %>
+      <div class="game-actions">
+        <button class="btn btn-small" onclick="document.getElementById('edit-game').classList.toggle('hidden')">Edit Info</button>
+        <form method="POST" action="/games/<%= game.id %>/delete" onsubmit="return confirm('Delete this game and all its rules?')">
+          <button type="submit" class="btn btn-small btn-danger">Delete Game</button>
+        </form>
+      </div>
+      <% } %>
+    </div>
+    <p class="meta">
+      <% if (game.genre) { %><%= game.genre %><% } %>
+      <% if (game.min_players || game.max_players) { %> &middot; <%= game.min_players || '?' %>-<%= game.max_players || '?' %> players<% } %>
+      <% if (game.play_time_minutes) { %> &middot; <%= game.play_time_minutes %> min<% } %>
+      <% if (game.publisher) { %> &middot; <%= game.publisher %><% } %>
+    </p>
+    <% if (game.notes) { %><p class="notes"><%= game.notes %></p><% } %>
+  </div>
 </div>
-<p class="meta">
-  <% if (game.genre) { %><%= game.genre %><% } %>
-  <% if (game.min_players || game.max_players) { %> &middot; <%= game.min_players || '?' %>-<%= game.max_players || '?' %> players<% } %>
-  <% if (game.play_time_minutes) { %> &middot; <%= game.play_time_minutes %> min<% } %>
-  <% if (game.publisher) { %> &middot; <%= game.publisher %><% } %>
-</p>
-<% if (game.notes) { %><p class="notes"><%= game.notes %></p><% } %>
 
 <% if (isAdmin) { %>
 <div id="edit-game" class="form-card hidden">
@@ -39,6 +46,9 @@
       <label>Max players<input type="number" name="max_players" value="<%= game.max_players || '' %>"></label>
     </div>
     <label>Play time (minutes)<input type="number" name="play_time_minutes" value="<%= game.play_time_minutes || '' %>"></label>
+    <label>Box art URL
+      <input type="url" name="cover_image_url" value="<%= game.cover_image_url || '' %>" placeholder="https://...">
+    </label>
     <label>Notes<textarea name="notes" rows="3"><%= game.notes || '' %></textarea></label>
     <button type="submit" class="btn">Save Changes</button>
   </form>

@@ -6,13 +6,15 @@ CREATE TABLE IF NOT EXISTS games (
   min_players INTEGER,
   max_players INTEGER,
   play_time_minutes INTEGER,
+  cover_image_url TEXT,
   notes TEXT,
   created_at TIMESTAMP DEFAULT now()
 );
 
--- Upgrade path for databases created before genre/play_time_minutes existed.
+-- Upgrade path for databases created before genre/play_time_minutes/cover_image_url existed.
 ALTER TABLE games ADD COLUMN IF NOT EXISTS genre TEXT;
 ALTER TABLE games ADD COLUMN IF NOT EXISTS play_time_minutes INTEGER;
+ALTER TABLE games ADD COLUMN IF NOT EXISTS cover_image_url TEXT;
 
 -- Base rules: sections parsed/entered from the official rulebook.
 CREATE TABLE IF NOT EXISTS base_rule_sections (

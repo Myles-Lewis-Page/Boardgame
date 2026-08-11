@@ -20,11 +20,11 @@ router.get('/new', requireAuth, (req, res) => {
 
 // Create game (requires login)
 router.post('/', requireAuth, async (req, res) => {
-  const { name, publisher, genre, min_players, max_players, play_time_minutes, notes } = req.body;
+  const { name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes } = req.body;
   const { rows } = await pool.query(
-    `INSERT INTO games (name, publisher, genre, min_players, max_players, play_time_minutes, notes)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-    [name, publisher || null, genre || null, min_players || null, max_players || null, play_time_minutes || null, notes || null]
+    `INSERT INTO games (name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+    [name, publisher || null, genre || null, min_players || null, max_players || null, play_time_minutes || null, cover_image_url || null, notes || null]
   );
   res.redirect(`/games/${rows[0].id}`);
 });
@@ -51,10 +51,10 @@ router.get('/:id', async (req, res) => {
 // Edit game info (requires login)
 router.post('/:id/edit', requireAuth, async (req, res) => {
   const { id } = req.params;
-  const { name, publisher, genre, min_players, max_players, play_time_minutes, notes } = req.body;
+  const { name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes } = req.body;
   await pool.query(
-    `UPDATE games SET name=$1, publisher=$2, genre=$3, min_players=$4, max_players=$5, play_time_minutes=$6, notes=$7 WHERE id=$8`,
-    [name, publisher || null, genre || null, min_players || null, max_players || null, play_time_minutes || null, notes || null, id]
+    `UPDATE games SET name=$1, publisher=$2, genre=$3, min_players=$4, max_players=$5, play_time_minutes=$6, cover_image_url=$7, notes=$8 WHERE id=$9`,
+    [name, publisher || null, genre || null, min_players || null, max_players || null, play_time_minutes || null, cover_image_url || null, notes || null, id]
   );
   res.redirect(`/games/${id}`);
 });

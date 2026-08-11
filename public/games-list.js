@@ -55,6 +55,9 @@
 
     grid.innerHTML = filtered.map(g => `
       <a class="game-card" href="/games/${g.id}">
+        ${g.cover_image_url
+          ? `<img class="box-art-thumb" src="${escapeHtml(g.cover_image_url)}" alt="${escapeHtml(g.name)} box art" loading="lazy">`
+          : `<div class="box-art-thumb box-art-placeholder">🎲</div>`}
         <h2>${escapeHtml(g.name)}</h2>
         <p class="meta">${formatMeta(g)}</p>
       </a>
