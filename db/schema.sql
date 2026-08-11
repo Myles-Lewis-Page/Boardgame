@@ -2,12 +2,17 @@ CREATE TABLE IF NOT EXISTS games (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   publisher TEXT,
+  genre TEXT,
   min_players INTEGER,
   max_players INTEGER,
-  play_time TEXT,
+  play_time_minutes INTEGER,
   notes TEXT,
   created_at TIMESTAMP DEFAULT now()
 );
+
+-- Upgrade path for databases created before genre/play_time_minutes existed.
+ALTER TABLE games ADD COLUMN IF NOT EXISTS genre TEXT;
+ALTER TABLE games ADD COLUMN IF NOT EXISTS play_time_minutes INTEGER;
 
 -- Base rules: sections parsed/entered from the official rulebook.
 CREATE TABLE IF NOT EXISTS base_rule_sections (

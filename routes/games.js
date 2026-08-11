@@ -1,30 +1,35 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const { requireAuth } = require('../middleware/auth');
 
-// List all games
+// List all games (public) - sort/filter/search happens client-side in the
+// browser via embedded JSON, so it's instant on an iPad with no reloads.
 router.get('/', async (req, res) => {
   const { rows: games } = await pool.query('SELECT * FROM games ORDER BY name ASC');
-  res.render('index', { games });
+  const { rows: genreRows } = await pool.query(
+    "SELECT DISTINCT genre FROM games WHERE genre IS NOT NULL AND genre <> '' ORDER BY genre ASC"
+  );
+  res.render('index', { games, genres: genreRows.map(r => r.genre) });
 });
 
-// New game form
-router.get('/new', (req, res) => {
+// New game form (requires login)
+router.get('/new', requireAuth, (req, res) => {
   res.render('new-game');
 });
 
-// Create game
-router.post('/', async (req, res) => {
-  const { name, publisher, min_players, max_players, play_time, notes } = req.body;
+// Create game (requires login)
+router.post('/', requireAuth, async (req, res) => {
+  const { name, publisher, genre, min_players, max_players, play_time_minutes, notes } = req.body;
   const { rows } = await pool.query(
-    `INSERT INTO games (name, publisher, min_players, max_players, play_time, notes)
-     VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-    [name, publisher || null, min_players || null, max_players || null, play_time || null, notes || null]
+    `INSERT INTO games (name, publisher, genre, min_players, max_players, play_time_minutes, notes)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+    [name, publisher || null, genre || null, min_players || null, max_players || null, play_time_minutes || null, notes || null]
   );
   res.redirect(`/games/${rows[0].id}`);
 });
 
-// Game detail: base rules + house rules
+// Game detail: base rules + house rules (public)
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
   const { rows: gameRows } = await pool.query('SELECT * FROM games WHERE id = $1', [id]);
@@ -43,19 +48,19 @@ router.get('/:id', async (req, res) => {
   res.render('game-detail', { game, baseSections, houseRules });
 });
 
-// Edit game info
-router.post('/:id/edit', async (req, res) => {
+// Edit game info (requires login)
+router.post('/:id/edit', requireAuth, async (req, res) => {
   const { id } = req.params;
-  const { name, publisher, min_players, max_players, play_time, notes } = req.body;
+  const { name, publisher, genre, min_players, max_players, play_time_minutes, notes } = req.body;
   await pool.query(
-    `UPDATE games SET name=$1, publisher=$2, min_players=$3, max_players=$4, play_time=$5, notes=$6 WHERE id=$7`,
-    [name, publisher || null, min_players || null, max_players || null, play_time || null, notes || null, id]
+    `UPDATE games SET name=$1, publisher=$2, genre=$3, min_players=$4, max_players=$5, play_time_minutes=$6, notes=$7 WHERE id=$8`,
+    [name, publisher || null, genre || null, min_players || null, max_players || null, play_time_minutes || null, notes || null, id]
   );
   res.redirect(`/games/${id}`);
 });
 
-// Delete game
-router.post('/:id/delete', async (req, res) => {
+// Delete game (requires login)
+router.post('/:id/delete', requireAuth, async (req, res) => {
   await pool.query('DELETE FROM games WHERE id = $1', [req.params.id]);
   res.redirect('/games');
 });

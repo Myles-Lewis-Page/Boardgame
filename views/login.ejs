@@ -1,0 +1,14 @@
+<%- include('partials/head', { title: 'Log In' }) %>
+
+<h1>Log In to Edit</h1>
+<p class="hint">Anyone can browse games and rules. You just need the game-room passcode to add or edit something.</p>
+
+<% if (error) { %><p class="error"><%= error %></p><% } %>
+
+<form method="POST" action="/login" class="form-card">
+  <input type="hidden" name="next_url" value="<%= next_url %>">
+  <label>Passcode<input type="password" name="password" autofocus required></label>
+  <button type="submit" class="btn">Log In</button>
+</form>
+
+<%- include('partials/foot') %>

@@ -3,22 +3,45 @@
 <h1>My Games</h1>
 
 <% if (games.length === 0) { %>
-  <p class="empty">No games yet. <a href="/games/new">Add your first one</a>.</p>
+  <p class="empty">No games yet. <% if (isAdmin) { %><a href="/games/new">Add your first one</a>.<% } else { %>Log in to add one.<% } %></p>
 <% } else { %>
-  <div class="game-grid">
-    <% games.forEach(g => { %>
-      <a class="game-card" href="/games/<%= g.id %>">
-        <h2><%= g.name %></h2>
-        <p class="meta">
-          <% if (g.publisher) { %><%= g.publisher %><% } %>
-          <% if (g.min_players || g.max_players) { %>
-            &middot; <%= g.min_players || '?' %>-<%= g.max_players || '?' %> players
-          <% } %>
-          <% if (g.play_time) { %> &middot; <%= g.play_time %><% } %>
-        </p>
-      </a>
+
+<div class="filter-bar">
+  <input type="search" id="search-box" placeholder="Search games..." aria-label="Search games">
+
+  <select id="sort-select" aria-label="Sort by">
+    <option value="name-asc">Name (A-Z)</option>
+    <option value="name-desc">Name (Z-A)</option>
+    <option value="players-asc">Player count (low-high)</option>
+    <option value="players-desc">Player count (high-low)</option>
+    <option value="time-asc">Time (shortest first)</option>
+    <option value="time-desc">Time (longest first)</option>
+  </select>
+
+  <select id="genre-select" aria-label="Filter by genre">
+    <option value="">All genres</option>
+    <% genres.forEach(g => { %>
+      <option value="<%= g %>"><%= g %></option>
     <% }) %>
-  </div>
+  </select>
+
+  <select id="players-select" aria-label="Filter by player count">
+    <option value="">Any player count</option>
+    <% for (let n = 1; n <= 8; n++) { %>
+      <option value="<%= n %>">Fits <%= n %> player<%= n > 1 ? 's' : '' %></option>
+    <% } %>
+  </select>
+</div>
+
+<p id="no-results" class="empty hidden">No games match those filters.</p>
+
+<div class="game-grid" id="game-grid"></div>
+
+<script>
+  const ALL_GAMES = <%- JSON.stringify(games) %>;
+</script>
+<script src="/games-list.js"></script>
+
 <% } %>
 
 <%- include('partials/foot') %>

@@ -2,16 +2,17 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const { parseRulebook } = require('../db/parseRulebook');
+const { requireAuth } = require('../middleware/auth');
 
-// Show paste-rulebook form for a game
-router.get('/games/:gameId/base-rules/paste', async (req, res) => {
+// Show paste-rulebook form for a game (requires login)
+router.get('/games/:gameId/base-rules/paste', requireAuth, async (req, res) => {
   const { rows } = await pool.query('SELECT * FROM games WHERE id = $1', [req.params.gameId]);
   if (!rows.length) return res.status(404).send('Game not found');
   res.render('paste-rulebook', { game: rows[0] });
 });
 
-// Handle pasted rulebook text -> parse -> preview before saving
-router.post('/games/:gameId/base-rules/parse-preview', async (req, res) => {
+// Handle pasted rulebook text -> parse -> preview before saving (requires login)
+router.post('/games/:gameId/base-rules/parse-preview', requireAuth, async (req, res) => {
   const { rawText } = req.body;
   const { rows } = await pool.query('SELECT * FROM games WHERE id = $1', [req.params.gameId]);
   if (!rows.length) return res.status(404).send('Game not found');
@@ -19,8 +20,8 @@ router.post('/games/:gameId/base-rules/parse-preview', async (req, res) => {
   res.render('preview-rulebook', { game: rows[0], sections, rawText });
 });
 
-// Save the (possibly hand-edited) parsed sections
-router.post('/games/:gameId/base-rules/save', async (req, res) => {
+// Save the (possibly hand-edited) parsed sections (requires login)
+router.post('/games/:gameId/base-rules/save', requireAuth, async (req, res) => {
   const { gameId } = req.params;
   let { titles, bodies } = req.body; // arrays, same index = same section
   if (!Array.isArray(titles)) titles = [titles];
@@ -47,8 +48,8 @@ router.post('/games/:gameId/base-rules/save', async (req, res) => {
   res.redirect(`/games/${gameId}`);
 });
 
-// Add a single base rule section manually
-router.post('/games/:gameId/base-rules', async (req, res) => {
+// Add a single base rule section manually (requires login)
+router.post('/games/:gameId/base-rules', requireAuth, async (req, res) => {
   const { gameId } = req.params;
   const { title, body } = req.body;
   const { rows } = await pool.query(
@@ -62,15 +63,15 @@ router.post('/games/:gameId/base-rules', async (req, res) => {
   res.redirect(`/games/${gameId}`);
 });
 
-// Edit a base rule section
-router.post('/base-rules/:id/edit', async (req, res) => {
+// Edit a base rule section (requires login)
+router.post('/base-rules/:id/edit', requireAuth, async (req, res) => {
   const { title, body, gameId } = req.body;
   await pool.query('UPDATE base_rule_sections SET title=$1, body=$2 WHERE id=$3', [title, body, req.params.id]);
   res.redirect(`/games/${gameId}`);
 });
 
-// Delete a base rule section
-router.post('/base-rules/:id/delete', async (req, res) => {
+// Delete a base rule section (requires login)
+router.post('/base-rules/:id/delete', requireAuth, async (req, res) => {
   const { gameId } = req.body;
   await pool.query('DELETE FROM base_rule_sections WHERE id = $1', [req.params.id]);
   res.redirect(`/games/${gameId}`);

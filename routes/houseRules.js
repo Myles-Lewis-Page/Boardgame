@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const { requireAuth } = require('../middleware/auth');
 
-// Add a house rule (optionally linked to a base section it overrides)
-router.post('/games/:gameId/house-rules', async (req, res) => {
+// Add a house rule (requires login)
+router.post('/games/:gameId/house-rules', requireAuth, async (req, res) => {
   const { gameId } = req.params;
   const { title, body, base_section_id } = req.body;
   const { rows } = await pool.query(
@@ -18,8 +19,8 @@ router.post('/games/:gameId/house-rules', async (req, res) => {
   res.redirect(`/games/${gameId}`);
 });
 
-// Edit a house rule
-router.post('/house-rules/:id/edit', async (req, res) => {
+// Edit a house rule (requires login)
+router.post('/house-rules/:id/edit', requireAuth, async (req, res) => {
   const { title, body, gameId, base_section_id } = req.body;
   await pool.query(
     'UPDATE house_rules SET title=$1, body=$2, base_section_id=$3 WHERE id=$4',
@@ -28,15 +29,15 @@ router.post('/house-rules/:id/edit', async (req, res) => {
   res.redirect(`/games/${gameId}`);
 });
 
-// Toggle active/inactive (so you can keep house rules on file without them applying)
-router.post('/house-rules/:id/toggle', async (req, res) => {
+// Toggle active/inactive (requires login)
+router.post('/house-rules/:id/toggle', requireAuth, async (req, res) => {
   const { gameId } = req.body;
   await pool.query('UPDATE house_rules SET is_active = NOT is_active WHERE id = $1', [req.params.id]);
   res.redirect(`/games/${gameId}`);
 });
 
-// Delete a house rule
-router.post('/house-rules/:id/delete', async (req, res) => {
+// Delete a house rule (requires login)
+router.post('/house-rules/:id/delete', requireAuth, async (req, res) => {
   const { gameId } = req.body;
   await pool.query('DELETE FROM house_rules WHERE id = $1', [req.params.id]);
   res.redirect(`/games/${gameId}`);

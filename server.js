@@ -1,12 +1,16 @@
 require('dotenv').config();
 const express = require('express');
+const session = require('express-session');
 const methodOverride = require('method-override');
 const fs = require('fs');
 const path = require('path');
 const pool = require('./db');
+const { attachAuthLocals } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.set('trust proxy', 1); // Railway sits behind a proxy; needed for secure cookies to work
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -15,8 +19,21 @@ app.use(express.json());
 app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days - it's a game room, staying logged in is convenient
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  }
+}));
+app.use(attachAuthLocals);
+
 app.get('/', (req, res) => res.redirect('/games'));
 
+app.use('/', require('./routes/auth'));
 app.use('/games', require('./routes/games'));
 app.use('/', require('./routes/baseRules'));
 app.use('/', require('./routes/houseRules'));
