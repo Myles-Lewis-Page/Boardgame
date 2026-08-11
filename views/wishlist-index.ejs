@@ -4,7 +4,10 @@
 <p class="hint">Games you don't own yet. Paste the rulebook text when you add one, and it's ready to go the moment you mark it owned, no re-entering anything.</p>
 
 <% if (isAdmin) { %>
-<p><a href="/wishlist/new" class="btn">+ Add to Wishlist</a></p>
+<p>
+  <a href="/wishlist/new" class="btn">+ Add to Wishlist</a>
+  <a href="/wishlist/import" class="btn btn-secondary">Import from CSV</a>
+</p>
 <% } %>
 
 <% if (wishlistGames.length === 0) { %>

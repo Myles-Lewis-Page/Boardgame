@@ -1,0 +1,36 @@
+<%- include('partials/head', { title: 'Import Wishlist' }) %>
+
+<p><a href="/wishlist">&larr; Wishlist</a></p>
+<h1>Import Wishlist Games</h1>
+<p class="hint">
+  Same CSV format as the regular game import. Columns:
+  <code>name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, rules_text</code>
+  &mdash; only <code>name</code> is required. <code>rules_text</code> is saved as-is (not split into sections
+  until you mark that entry owned later).
+</p>
+<p><a href="/wishlist/import/template" class="btn btn-small btn-secondary">Download starter template.csv</a></p>
+
+<form method="POST" action="/wishlist/import/preview" class="form-card" id="import-form">
+  <label>Upload a CSV file
+    <input type="file" id="csv-file-input" accept=".csv,text/csv">
+  </label>
+  <label>...or paste CSV text here
+    <textarea name="rawCsv" id="raw-csv" rows="14" placeholder="name,publisher,genre,min_players,max_players,play_time_minutes,cover_image_url,notes,rules_text
+Pandemic,Z-Man Games,Cooperative,2,4,45,,,"></textarea>
+  </label>
+  <button type="submit" class="btn">Preview Import</button>
+</form>
+
+<script>
+  document.getElementById('csv-file-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      document.getElementById('raw-csv').value = reader.result;
+    };
+    reader.readAsText(file);
+  });
+</script>
+
+<%- include('partials/foot') %>

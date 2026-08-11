@@ -1,0 +1,11 @@
+<%- include('partials/head', { title: 'Import Complete' }) %>
+
+<h1>Import Complete</h1>
+<p><%= insertedCount %> game<%= insertedCount === 1 ? '' : 's' %> added to the wishlist.</p>
+
+<p>
+  <a href="/wishlist" class="btn">Back to Wishlist</a>
+  <a href="/wishlist/import" class="btn btn-secondary">Import More</a>
+</p>
+
+<%- include('partials/foot') %>

@@ -1,0 +1,55 @@
+<%- include('partials/head', { title: 'Review Wishlist Import' }) %>
+
+<p><a href="/wishlist/import">&larr; Try a different file</a></p>
+<h1>Review Wishlist Import</h1>
+
+<% if (headerError) { %>
+  <p class="error"><%= headerError %></p>
+  <p><a href="/wishlist/import" class="btn">Back</a></p>
+<% } else if (games.length === 0) { %>
+  <p class="empty">No rows found below the header. Nothing to import.</p>
+<% } else { %>
+
+  <p class="hint">
+    <%= games.length %> row<%= games.length === 1 ? '' : 's' %> found.
+    Rows with a problem are unchecked and highlighted, fix them or leave them unchecked to skip.
+  </p>
+
+  <form method="POST" action="/wishlist/import/save">
+    <% games.forEach((g, i) => { %>
+      <div class="import-row-card <%= g.errors.length ? 'row-error' : '' %>">
+        <div class="import-row-header">
+          <label class="import-include">
+            <input type="checkbox" name="include" value="<%= i %>" <%= g.errors.length ? '' : 'checked' %>>
+            Row <%= g.row_number %>
+          </label>
+          <% if (g.errors.length) { %><span class="row-error-msg"><%= g.errors.join(', ') %></span><% } %>
+        </div>
+
+        <div class="import-row-fields">
+          <label>Name<input type="text" name="name" value="<%= g.name %>"></label>
+          <label>Publisher<input type="text" name="publisher" value="<%= g.publisher %>"></label>
+          <label>Genre<input type="text" name="genre" value="<%= g.genre %>"></label>
+          <label>Min players<input type="number" name="min_players" value="<%= g.min_players ?? '' %>"></label>
+          <label>Max players<input type="number" name="max_players" value="<%= g.max_players ?? '' %>"></label>
+          <label>Minutes<input type="number" name="play_time_minutes" value="<%= g.play_time_minutes ?? '' %>"></label>
+          <label class="span-2">Box art URL<input type="url" name="cover_image_url" value="<%= g.cover_image_url %>"></label>
+          <label class="span-2">Notes<input type="text" name="notes" value="<%= g.notes %>"></label>
+        </div>
+
+        <label class="rules-text-label">
+          Rulebook text
+          <% if (g.detected_section_count > 0) { %>
+            <span class="badge badge-override"><%= g.detected_section_count %> section<%= g.detected_section_count === 1 ? '' : 's' %> will be created when marked owned</span>
+          <% } %>
+          <textarea name="rules_text" rows="6" placeholder="Optional: paste the rulebook text here, saved as-is until this entry is marked owned"><%= g.rules_text %></textarea>
+        </label>
+      </div>
+    <% }) %>
+
+    <button type="submit" class="btn">Save Checked Games to Wishlist</button>
+  </form>
+
+<% } %>
+
+<%- include('partials/foot') %>
