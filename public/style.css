@@ -109,6 +109,47 @@ a { color: var(--accent); }
   .box-art { width: 100%; height: 160px; }
 }
 
+/* Bulk import table */
+.import-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: 16px 0;
+}
+.import-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.85rem;
+}
+.import-table th, .import-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+.import-table th {
+  background: var(--card);
+  color: var(--text-dim);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+.import-table input[type=text], .import-table input[type=url], .import-table input[type=number] {
+  min-height: 34px;
+  width: 140px;
+}
+.import-table input.narrow { width: 60px; }
+.import-table tr.row-error { background: rgba(192, 86, 74, 0.12); }
+.row-num { color: var(--text-dim); }
+.row-error-msg { color: var(--danger); font-size: 0.75rem; white-space: normal; max-width: 160px; }
+code {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 0.85em;
+}
+
 .form-card {
   background: var(--card);
   border: 1px solid var(--border);

@@ -1,0 +1,37 @@
+<%- include('partials/head', { title: 'Import Games' }) %>
+
+<p><a href="/games">&larr; All games</a></p>
+<h1>Import Games</h1>
+<p class="hint">
+  Upload or paste a CSV to add many games at once. Columns:
+  <code>name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes</code>
+  &mdash; only <code>name</code> is required, leave the rest blank if you don't have it.
+  You'll get a preview to fix anything before it's saved.
+</p>
+<p><a href="/games/import/template" class="btn btn-small btn-secondary">Download starter template.csv</a></p>
+
+<form method="POST" action="/games/import/preview" class="form-card" id="import-form">
+  <label>Upload a CSV file
+    <input type="file" id="csv-file-input" accept=".csv,text/csv">
+  </label>
+  <label>...or paste CSV text here
+    <textarea name="rawCsv" id="raw-csv" rows="14" placeholder="name,publisher,genre,min_players,max_players,play_time_minutes,cover_image_url,notes
+Catan,Kosmos,Strategy,3,4,90,,
+Dominion,,Deck Building,2,4,45,,"></textarea>
+  </label>
+  <button type="submit" class="btn">Preview Import</button>
+</form>
+
+<script>
+  document.getElementById('csv-file-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      document.getElementById('raw-csv').value = reader.result;
+    };
+    reader.readAsText(file);
+  });
+</script>
+
+<%- include('partials/foot') %>

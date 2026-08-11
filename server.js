@@ -34,6 +34,7 @@ app.use(attachAuthLocals);
 app.get('/', (req, res) => res.redirect('/games'));
 
 app.use('/', require('./routes/auth'));
+app.use('/', require('./routes/importGames')); // must be mounted before games router so /games/import doesn't match games.js's /:id route
 app.use('/games', require('./routes/games'));
 app.use('/', require('./routes/baseRules'));
 app.use('/', require('./routes/houseRules'));
