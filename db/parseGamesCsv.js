@@ -1,9 +1,12 @@
 /**
  * Minimal dependency-free CSV parser, good enough for a games import file
- * (handles quoted fields, embedded commas, embedded quotes via "").
+ * (handles quoted fields, embedded commas, embedded quotes via "", and
+ * multi-line quoted fields for the rules_text column).
  * Not a full RFC4180 implementation, but covers what a spreadsheet export
  * (Google Sheets/Excel "CSV" save) produces.
  */
+const { parseRulebook } = require('./parseRulebook');
+
 function parseCsvText(text) {
   const rows = [];
   let row = [];
@@ -35,7 +38,7 @@ function parseCsvText(text) {
 
 const EXPECTED_HEADERS = [
   'name', 'publisher', 'genre', 'min_players', 'max_players',
-  'play_time_minutes', 'cover_image_url', 'notes'
+  'play_time_minutes', 'cover_image_url', 'notes', 'rules_text'
 ];
 
 /**
@@ -83,6 +86,8 @@ function parseGamesCsv(rawText) {
       play_time_minutes: toIntOrNull(raw.play_time_minutes, 'play_time_minutes'),
       cover_image_url: raw.cover_image_url || '',
       notes: raw.notes || '',
+      rules_text: raw.rules_text || '',
+      detected_section_count: raw.rules_text ? parseRulebook(raw.rules_text).length : 0,
       errors
     };
   });
@@ -90,10 +95,17 @@ function parseGamesCsv(rawText) {
   return { headers: headerRow, games, headerError: null };
 }
 
-const CSV_TEMPLATE = `name,publisher,genre,min_players,max_players,play_time_minutes,cover_image_url,notes
-Catan,Kosmos,Strategy,3,4,90,https://example.com/catan.jpg,Base game plus Seafarers expansion
-Dominion,Rio Grande Games,Deck Building,2,4,45,,
-Ticket to Ride,Days of Wonder,Family,2,5,60,,
+const CSV_TEMPLATE = `name,publisher,genre,min_players,max_players,play_time_minutes,cover_image_url,notes,rules_text
+Catan,Kosmos,Strategy,3,4,90,,Base game plus Seafarers expansion,"SETUP
+Place the board in the middle of the table. Give each player 2 wood and 2 brick.
+
+BUILDING ROADS
+Roads cost 1 wood and 1 brick. You must connect to an existing road or settlement.
+
+TRADING
+You may trade with other players or the bank at a 4:1 ratio."
+Dominion,Rio Grande Games,Deck Building,2,4,45,,,
+Ticket to Ride,Days of Wonder,Family,2,5,60,,,
 `;
 
 module.exports = { parseCsvText, parseGamesCsv, EXPECTED_HEADERS, CSV_TEMPLATE };

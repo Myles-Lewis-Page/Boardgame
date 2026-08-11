@@ -12,50 +12,42 @@
 
   <p class="hint">
     <%= games.length %> row<%= games.length === 1 ? '' : 's' %> found.
-    Rows with a problem are unchecked and highlighted, fix them or leave them out.
-    Edit anything inline, then save.
+    Rows with a problem are unchecked and highlighted, fix them or leave them unchecked to skip.
+    Edit anything inline (including the rulebook text), then save.
   </p>
 
-  <form method="POST" action="/games/import/save" class="import-preview-form">
-    <div class="import-table-wrap">
-      <table class="import-table">
-        <thead>
-          <tr>
-            <th>Add?</th>
-            <th>Row</th>
-            <th>Name</th>
-            <th>Publisher</th>
-            <th>Genre</th>
-            <th>Min</th>
-            <th>Max</th>
-            <th>Minutes</th>
-            <th>Box art URL</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% games.forEach((g, i) => { %>
-            <tr class="<%= g.errors.length ? 'row-error' : '' %>">
-              <td>
-                <input type="checkbox" name="include" value="<%= i %>" <%= g.errors.length ? '' : 'checked' %>>
-              </td>
-              <td class="row-num">
-                <%= g.row_number %>
-                <% if (g.errors.length) { %><div class="row-error-msg"><%= g.errors.join(', ') %></div><% } %>
-              </td>
-              <td><input type="text" name="name" value="<%= g.name %>"></td>
-              <td><input type="text" name="publisher" value="<%= g.publisher %>"></td>
-              <td><input type="text" name="genre" value="<%= g.genre %>"></td>
-              <td><input type="number" name="min_players" value="<%= g.min_players ?? '' %>" class="narrow"></td>
-              <td><input type="number" name="max_players" value="<%= g.max_players ?? '' %>" class="narrow"></td>
-              <td><input type="number" name="play_time_minutes" value="<%= g.play_time_minutes ?? '' %>" class="narrow"></td>
-              <td><input type="url" name="cover_image_url" value="<%= g.cover_image_url %>"></td>
-              <td><input type="text" name="notes" value="<%= g.notes %>"></td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
-    </div>
+  <form method="POST" action="/games/import/save">
+    <% games.forEach((g, i) => { %>
+      <div class="import-row-card <%= g.errors.length ? 'row-error' : '' %>">
+        <div class="import-row-header">
+          <label class="import-include">
+            <input type="checkbox" name="include" value="<%= i %>" <%= g.errors.length ? '' : 'checked' %>>
+            Row <%= g.row_number %>
+          </label>
+          <% if (g.errors.length) { %><span class="row-error-msg"><%= g.errors.join(', ') %></span><% } %>
+        </div>
+
+        <div class="import-row-fields">
+          <label>Name<input type="text" name="name" value="<%= g.name %>"></label>
+          <label>Publisher<input type="text" name="publisher" value="<%= g.publisher %>"></label>
+          <label>Genre<input type="text" name="genre" value="<%= g.genre %>"></label>
+          <label>Min players<input type="number" name="min_players" value="<%= g.min_players ?? '' %>"></label>
+          <label>Max players<input type="number" name="max_players" value="<%= g.max_players ?? '' %>"></label>
+          <label>Minutes<input type="number" name="play_time_minutes" value="<%= g.play_time_minutes ?? '' %>"></label>
+          <label class="span-2">Box art URL<input type="url" name="cover_image_url" value="<%= g.cover_image_url %>"></label>
+          <label class="span-2">Notes<input type="text" name="notes" value="<%= g.notes %>"></label>
+        </div>
+
+        <label class="rules-text-label">
+          Rulebook text
+          <% if (g.detected_section_count > 0) { %>
+            <span class="badge badge-override"><%= g.detected_section_count %> section<%= g.detected_section_count === 1 ? '' : 's' %> detected</span>
+          <% } %>
+          <textarea name="rules_text" rows="6" placeholder="Optional: paste the rulebook text here, it'll be split into sections automatically on save"><%= g.rules_text %></textarea>
+        </label>
+      </div>
+    <% }) %>
+
     <button type="submit" class="btn">Save Checked Games</button>
   </form>
 

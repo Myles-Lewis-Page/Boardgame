@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { parseGamesCsv, CSV_TEMPLATE } = require('../db/parseGamesCsv');
+const { parseRulebook } = require('../db/parseRulebook');
 
 // Download a starter CSV template (requires login, same as the rest of import)
 router.get('/games/import/template', requireAuth, (req, res) => {
@@ -26,7 +27,7 @@ router.post('/games/import/preview', requireAuth, (req, res) => {
 
 // Save all valid rows (skips rows still marked as having errors)
 router.post('/games/import/save', requireAuth, async (req, res) => {
-  let { name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, include } = req.body;
+  let { name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, rules_text, include } = req.body;
 
   const toArray = v => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
   name = toArray(name);
@@ -37,18 +38,21 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
   play_time_minutes = toArray(play_time_minutes);
   cover_image_url = toArray(cover_image_url);
   notes = toArray(notes);
+  rules_text = toArray(rules_text);
   const includeSet = new Set(toArray(include));
 
   const client = await pool.connect();
   let insertedCount = 0;
+  let sectionsInsertedCount = 0;
   try {
     await client.query('BEGIN');
     for (let i = 0; i < name.length; i++) {
       if (!includeSet.has(String(i))) continue;
       if (!name[i] || !name[i].trim()) continue;
-      await client.query(
+
+      const { rows } = await client.query(
         `INSERT INTO games (name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
         [
           name[i].trim(),
           publisher[i] || null,
@@ -61,6 +65,20 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
         ]
       );
       insertedCount++;
+      const newGameId = rows[0].id;
+
+      const rawRules = (rules_text[i] || '').trim();
+      if (rawRules) {
+        const sections = parseRulebook(rawRules);
+        for (let s = 0; s < sections.length; s++) {
+          if (!sections[s].title.trim()) continue;
+          await client.query(
+            `INSERT INTO base_rule_sections (game_id, title, body, sort_order) VALUES ($1, $2, $3, $4)`,
+            [newGameId, sections[s].title.trim(), sections[s].body.trim(), s]
+          );
+          sectionsInsertedCount++;
+        }
+      }
     }
     await client.query('COMMIT');
   } catch (err) {
@@ -70,7 +88,7 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
     client.release();
   }
 
-  res.render('games-import-done', { insertedCount });
+  res.render('games-import-done', { insertedCount, sectionsInsertedCount });
 });
 
 module.exports = router;

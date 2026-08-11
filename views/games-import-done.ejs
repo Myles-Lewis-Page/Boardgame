@@ -1,7 +1,7 @@
 <%- include('partials/head', { title: 'Import Complete' }) %>
 
 <h1>Import Complete</h1>
-<p><%= insertedCount %> game<%= insertedCount === 1 ? '' : 's' %> added.</p>
+<p><%= insertedCount %> game<%= insertedCount === 1 ? '' : 's' %> added.<% if (sectionsInsertedCount > 0) { %> <%= sectionsInsertedCount %> rule section<%= sectionsInsertedCount === 1 ? '' : 's' %> created from the rulebook text.<% } %></p>
 
 <p>
   <a href="/games" class="btn">Back to Games</a>

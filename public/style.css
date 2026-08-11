@@ -150,6 +150,61 @@ code {
   font-size: 0.85em;
 }
 
+/* Import preview: per-row cards */
+.import-row-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+.import-row-card.row-error { border-color: var(--danger); }
+.import-row-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.import-include {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.import-include input { min-height: auto; width: auto; }
+.row-error-msg { color: var(--danger); font-size: 0.85rem; }
+
+.import-row-fields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.import-row-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.import-row-fields label.span-2 { grid-column: span 2; }
+
+.rules-text-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+.rules-text-label .badge { align-self: flex-start; }
+
+@media (max-width: 640px) {
+  .import-row-fields { grid-template-columns: 1fr 1fr; }
+  .import-row-fields label.span-2 { grid-column: span 2; }
+}
+
 .form-card {
   background: var(--card);
   border: 1px solid var(--border);
