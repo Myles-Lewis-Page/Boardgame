@@ -1,0 +1,146 @@
+<%- include('partials/head', { title: game.name }) %>
+
+<p><a href="/games">&larr; All games</a></p>
+
+<div class="game-header">
+  <h1><%= game.name %></h1>
+  <div class="game-actions">
+    <button class="btn btn-small" onclick="document.getElementById('edit-game').classList.toggle('hidden')">Edit Info</button>
+    <form method="POST" action="/games/<%= game.id %>/delete" onsubmit="return confirm('Delete this game and all its rules?')">
+      <button type="submit" class="btn btn-small btn-danger">Delete Game</button>
+    </form>
+  </div>
+</div>
+<p class="meta">
+  <% if (game.publisher) { %><%= game.publisher %><% } %>
+  <% if (game.min_players || game.max_players) { %> &middot; <%= game.min_players || '?' %>-<%= game.max_players || '?' %> players<% } %>
+  <% if (game.play_time) { %> &middot; <%= game.play_time %><% } %>
+</p>
+<% if (game.notes) { %><p class="notes"><%= game.notes %></p><% } %>
+
+<div id="edit-game" class="form-card hidden">
+  <form method="POST" action="/games/<%= game.id %>/edit">
+    <label>Name<input type="text" name="name" value="<%= game.name %>" required></label>
+    <label>Publisher<input type="text" name="publisher" value="<%= game.publisher || '' %>"></label>
+    <div class="row">
+      <label>Min players<input type="number" name="min_players" value="<%= game.min_players || '' %>"></label>
+      <label>Max players<input type="number" name="max_players" value="<%= game.max_players || '' %>"></label>
+    </div>
+    <label>Play time<input type="text" name="play_time" value="<%= game.play_time || '' %>"></label>
+    <label>Notes<textarea name="notes" rows="3"><%= game.notes || '' %></textarea></label>
+    <button type="submit" class="btn">Save Changes</button>
+  </form>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="base">Base Rules (<%= baseSections.length %>)</button>
+  <button class="tab-btn" data-tab="house">House Rules (<%= houseRules.filter(h => h.is_active).length %>/<%= houseRules.length %>)</button>
+</div>
+
+<!-- BASE RULES TAB -->
+<div class="tab-panel" id="tab-base">
+  <div class="panel-actions">
+    <a href="/games/<%= game.id %>/base-rules/paste" class="btn">Paste Rulebook Text</a>
+    <button class="btn btn-secondary" onclick="document.getElementById('add-base-form').classList.toggle('hidden')">+ Add Section Manually</button>
+  </div>
+
+  <div id="add-base-form" class="form-card hidden">
+    <form method="POST" action="/games/<%= game.id %>/base-rules">
+      <label>Section Title<input type="text" name="title" required></label>
+      <label>Rule Text<textarea name="body" rows="4" required></textarea></label>
+      <button type="submit" class="btn">Add Section</button>
+    </form>
+  </div>
+
+  <% if (baseSections.length === 0) { %>
+    <p class="empty">No base rules yet. Paste the rulebook text above to get started.</p>
+  <% } %>
+
+  <% baseSections.forEach(s => { %>
+    <details class="rule-card">
+      <summary><%= s.title %></summary>
+      <div class="rule-body-view"><%= s.body %></div>
+      <button class="btn btn-tiny" onclick="event.preventDefault(); this.closest('.rule-card').querySelector('.edit-form').classList.toggle('hidden')">Edit</button>
+      <form class="edit-form hidden" method="POST" action="/base-rules/<%= s.id %>/edit">
+        <input type="hidden" name="gameId" value="<%= game.id %>">
+        <label>Title<input type="text" name="title" value="<%= s.title %>"></label>
+        <label>Body<textarea name="body" rows="6"><%= s.body %></textarea></label>
+        <button type="submit" class="btn btn-tiny">Save</button>
+      </form>
+      <form method="POST" action="/base-rules/<%= s.id %>/delete" onsubmit="return confirm('Delete this section?')">
+        <input type="hidden" name="gameId" value="<%= game.id %>">
+        <button type="submit" class="btn btn-tiny btn-danger">Delete</button>
+      </form>
+    </details>
+  <% }) %>
+</div>
+
+<!-- HOUSE RULES TAB -->
+<div class="tab-panel hidden" id="tab-house">
+  <div class="panel-actions">
+    <button class="btn" onclick="document.getElementById('add-house-form').classList.toggle('hidden')">+ Add House Rule</button>
+  </div>
+
+  <div id="add-house-form" class="form-card hidden">
+    <form method="POST" action="/games/<%= game.id %>/house-rules">
+      <label>Title<input type="text" name="title" required></label>
+      <label>Rule Text<textarea name="body" rows="4" required></textarea></label>
+      <label>Overrides base section (optional)
+        <select name="base_section_id">
+          <option value="">-- Standalone house rule --</option>
+          <% baseSections.forEach(s => { %>
+            <option value="<%= s.id %>"><%= s.title %></option>
+          <% }) %>
+        </select>
+      </label>
+      <button type="submit" class="btn">Add House Rule</button>
+    </form>
+  </div>
+
+  <% if (houseRules.length === 0) { %>
+    <p class="empty">No house rules yet.</p>
+  <% } %>
+
+  <% houseRules.forEach(h => { %>
+    <details class="rule-card <%= h.is_active ? '' : 'inactive' %>">
+      <summary>
+        <%= h.title %>
+        <% if (!h.is_active) { %><span class="badge">off</span><% } %>
+        <% if (h.base_section_id) {
+          const base = baseSections.find(b => b.id === h.base_section_id);
+          if (base) { %><span class="badge badge-override">overrides: <%= base.title %></span><% }
+        } %>
+      </summary>
+      <div class="rule-body-view"><%= h.body %></div>
+      <div class="rule-card-actions">
+        <button class="btn btn-tiny" onclick="event.preventDefault(); this.closest('.rule-card').querySelector('.edit-form').classList.toggle('hidden')">Edit</button>
+        <form method="POST" action="/house-rules/<%= h.id %>/toggle">
+          <input type="hidden" name="gameId" value="<%= game.id %>">
+          <button type="submit" class="btn btn-tiny"><%= h.is_active ? 'Turn Off' : 'Turn On' %></button>
+        </form>
+        <form method="POST" action="/house-rules/<%= h.id %>/delete" onsubmit="return confirm('Delete this house rule?')">
+          <input type="hidden" name="gameId" value="<%= game.id %>">
+          <button type="submit" class="btn btn-tiny btn-danger">Delete</button>
+        </form>
+      </div>
+      <form class="edit-form hidden" method="POST" action="/house-rules/<%= h.id %>/edit">
+        <input type="hidden" name="gameId" value="<%= game.id %>">
+        <label>Title<input type="text" name="title" value="<%= h.title %>"></label>
+        <label>Body<textarea name="body" rows="6"><%= h.body %></textarea></label>
+        <label>Overrides base section
+          <select name="base_section_id">
+            <option value="">-- Standalone house rule --</option>
+            <% baseSections.forEach(s => { %>
+              <option value="<%= s.id %>" <%= h.base_section_id === s.id ? 'selected' : '' %>><%= s.title %></option>
+            <% }) %>
+          </select>
+        </label>
+        <button type="submit" class="btn btn-tiny">Save</button>
+      </form>
+    </details>
+  <% }) %>
+</div>
+
+<script src="/app.js"></script>
+
+<%- include('partials/foot') %>

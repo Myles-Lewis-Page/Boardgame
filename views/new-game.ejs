@@ -1,0 +1,17 @@
+<%- include('partials/head', { title: 'Add Game' }) %>
+
+<h1>Add a Game</h1>
+
+<form method="POST" action="/games" class="form-card">
+  <label>Name<input type="text" name="name" required></label>
+  <label>Publisher<input type="text" name="publisher"></label>
+  <div class="row">
+    <label>Min players<input type="number" name="min_players" min="1"></label>
+    <label>Max players<input type="number" name="max_players" min="1"></label>
+  </div>
+  <label>Play time<input type="text" name="play_time" placeholder="e.g. 60-90 min"></label>
+  <label>Notes<textarea name="notes" rows="3"></textarea></label>
+  <button type="submit" class="btn">Add Game</button>
+</form>
+
+<%- include('partials/foot') %>

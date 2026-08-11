@@ -1,0 +1,12 @@
+<%- include('partials/head', { title: 'Paste Rulebook - ' + game.name }) %>
+
+<p><a href="/games/<%= game.id %>">&larr; Back to <%= game.name %></a></p>
+<h1>Paste Rulebook Text</h1>
+<p class="hint">Paste the rulebook text (copy from a PDF or website). It'll be split into sections automatically, and you get to review/edit before saving.</p>
+
+<form method="POST" action="/games/<%= game.id %>/base-rules/parse-preview" class="form-card">
+  <textarea name="rawText" rows="20" placeholder="Paste rulebook text here..." required></textarea>
+  <button type="submit" class="btn">Parse Rulebook</button>
+</form>
+
+<%- include('partials/foot') %>
