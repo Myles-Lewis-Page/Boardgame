@@ -2,7 +2,7 @@
   const isExpansion = typeof expansion !== 'undefined' && expansion;
   const safeGameId = typeof gameId !== 'undefined' ? gameId : (game && game.id);
   const subjectName = isExpansion ? expansion.name : game.name;
-  const backUrl = isExpansion ? `/games/${safeGameId}/expansions/${expansion.id}` : `/games/${game.id}`;
+  const backUrl = isExpansion ? `/games/${safeGameId}#tab-rules` : `/games/${game.id}`;
   const actionUrl = isExpansion
     ? `/games/${safeGameId}/expansions/${expansion.id}/base-rules/parse-preview`
     : `/games/${game.id}/base-rules/parse-preview`;

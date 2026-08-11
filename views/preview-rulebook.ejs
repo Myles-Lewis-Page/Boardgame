@@ -8,7 +8,7 @@
   const saveUrl = isExpansion
     ? `/games/${safeGameId}/expansions/${expansion.id}/base-rules/save`
     : `/games/${game.id}/base-rules/save`;
-  const backToSubjectUrl = isExpansion ? `/games/${safeGameId}/expansions/${expansion.id}` : `/games/${game.id}`;
+  const backToSubjectUrl = isExpansion ? `/games/${safeGameId}#tab-rules` : `/games/${game.id}`;
 %>
 <%- include('partials/head', { title: 'Review Sections - ' + subjectName }) %>
 

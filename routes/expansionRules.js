@@ -5,6 +5,10 @@ const { parseRulebook } = require('../db/parseRulebook');
 const { requireAuth } = require('../middleware/auth');
 
 // ---- Base rules for an expansion ----
+// These still read/write rows scoped to a specific expansion, but every
+// action now redirects back to the merged game page (/games/:gameId) where
+// base + all expansion rules are browsed together, rather than a separate
+// per-expansion page.
 
 router.get('/games/:gameId/expansions/:expId/base-rules/paste', requireAuth, async (req, res) => {
   const { gameId, expId } = req.params;
@@ -46,7 +50,7 @@ router.post('/games/:gameId/expansions/:expId/base-rules/save', requireAuth, asy
     client.release();
   }
 
-  res.redirect(`/games/${gameId}/expansions/${expId}`);
+  res.redirect(`/games/${gameId}#tab-rules`);
 });
 
 router.post('/games/:gameId/expansions/:expId/base-rules', requireAuth, async (req, res) => {
@@ -60,21 +64,19 @@ router.post('/games/:gameId/expansions/:expId/base-rules', requireAuth, async (r
     'INSERT INTO base_rule_sections (game_id, expansion_id, title, body, sort_order) VALUES ($1, $2, $3, $4, $5)',
     [gameId, expId, title, body, rows[0].next_order]
   );
-  res.redirect(`/games/${gameId}/expansions/${expId}`);
+  res.redirect(`/games/${gameId}#tab-rules`);
 });
 
-// Edit/delete reuse the same base_rule_sections table as the main game, so
-// they redirect back to the expansion page instead of the game page.
 router.post('/expansion-base-rules/:id/edit', requireAuth, async (req, res) => {
-  const { title, body, gameId, expId } = req.body;
+  const { title, body, gameId } = req.body;
   await pool.query('UPDATE base_rule_sections SET title=$1, body=$2 WHERE id=$3', [title, body, req.params.id]);
-  res.redirect(`/games/${gameId}/expansions/${expId}`);
+  res.redirect(`/games/${gameId}#tab-rules`);
 });
 
 router.post('/expansion-base-rules/:id/delete', requireAuth, async (req, res) => {
-  const { gameId, expId } = req.body;
+  const { gameId } = req.body;
   await pool.query('DELETE FROM base_rule_sections WHERE id = $1', [req.params.id]);
-  res.redirect(`/games/${gameId}/expansions/${expId}`);
+  res.redirect(`/games/${gameId}#tab-rules`);
 });
 
 // ---- House rules for an expansion ----
@@ -91,28 +93,28 @@ router.post('/games/:gameId/expansions/:expId/house-rules', requireAuth, async (
      VALUES ($1, $2, $3, $4, $5, $6)`,
     [gameId, expId, base_section_id || null, title, body, rows[0].next_order]
   );
-  res.redirect(`/games/${gameId}/expansions/${expId}`);
+  res.redirect(`/games/${gameId}#tab-house`);
 });
 
 router.post('/expansion-house-rules/:id/edit', requireAuth, async (req, res) => {
-  const { title, body, gameId, expId, base_section_id } = req.body;
+  const { title, body, gameId, base_section_id } = req.body;
   await pool.query(
     'UPDATE house_rules SET title=$1, body=$2, base_section_id=$3 WHERE id=$4',
     [title, body, base_section_id || null, req.params.id]
   );
-  res.redirect(`/games/${gameId}/expansions/${expId}`);
+  res.redirect(`/games/${gameId}#tab-house`);
 });
 
 router.post('/expansion-house-rules/:id/toggle', requireAuth, async (req, res) => {
-  const { gameId, expId } = req.body;
+  const { gameId } = req.body;
   await pool.query('UPDATE house_rules SET is_active = NOT is_active WHERE id = $1', [req.params.id]);
-  res.redirect(`/games/${gameId}/expansions/${expId}`);
+  res.redirect(`/games/${gameId}#tab-house`);
 });
 
 router.post('/expansion-house-rules/:id/delete', requireAuth, async (req, res) => {
-  const { gameId, expId } = req.body;
+  const { gameId } = req.body;
   await pool.query('DELETE FROM house_rules WHERE id = $1', [req.params.id]);
-  res.redirect(`/games/${gameId}/expansions/${expId}`);
+  res.redirect(`/games/${gameId}#tab-house`);
 });
 
 module.exports = router;

@@ -210,6 +210,82 @@ code {
   background: rgba(217, 123, 63, 0.08);
 }
 
+/* "Playing with" filter bar (shared across Rules + House Rules tabs) */
+.playing-with-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 4px;
+}
+.playing-with-label {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+.source-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.source-chip input { min-height: auto; width: auto; }
+
+/* Grouped headers when rules/house rules come from multiple sources */
+.toc-subheader {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  margin: 10px 0 2px;
+  padding: 0 8px;
+}
+.toc-subheader:first-of-type { margin-top: 0; }
+.source-group-header {
+  font-size: 1rem;
+  color: var(--accent);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+  margin: 22px 0 10px;
+}
+.source-group-header:first-of-type { margin-top: 4px; }
+
+/* "Add rules for..." picker bar */
+.add-rules-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.add-target-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+.add-target-label select { min-height: 40px; }
+
+/* Expansion management cards (Expansions tab) */
+.expansion-manage-card { margin-bottom: 12px; }
+.expansion-manage-header {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.expansion-thumb {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+.expansion-manage-header h3 { margin: 0 0 4px; }
+
 .form-card {
   background: var(--card);
   border: 1px solid var(--border);

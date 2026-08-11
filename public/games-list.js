@@ -20,6 +20,7 @@
       parts.push(`${g.min_players || '?'}-${g.max_players || '?'} players`);
     }
     if (g.play_time_minutes) parts.push(`${g.play_time_minutes} min`);
+    if (g.expansion_count > 0) parts.push(`${g.expansion_count} expansion${g.expansion_count === 1 ? '' : 's'}`);
     return parts.join(' &middot; ');
   }
 
