@@ -1,0 +1,18 @@
+<%- include('partials/head', { title: 'Add Expansion - ' + game.name }) %>
+
+<p><a href="/games/<%= game.id %>">&larr; Back to <%= game.name %></a></p>
+<h1>Add an Expansion for <%= game.name %></h1>
+
+<form method="POST" action="/games/<%= game.id %>/expansions" class="form-card">
+  <label>Expansion Name<input type="text" name="name" required placeholder="e.g. Seafarers, Rails &amp; Sails"></label>
+  <div class="row">
+    <label>Min players<input type="number" name="min_players" min="1" placeholder="leave blank to match base game"></label>
+    <label>Max players<input type="number" name="max_players" min="1"></label>
+  </div>
+  <label>Play time (minutes)<input type="number" name="play_time_minutes" min="1"></label>
+  <label>Box art URL<input type="url" name="cover_image_url" placeholder="https://..."></label>
+  <label>Notes<textarea name="notes" rows="3"></textarea></label>
+  <button type="submit" class="btn">Add Expansion</button>
+</form>
+
+<%- include('partials/foot') %>

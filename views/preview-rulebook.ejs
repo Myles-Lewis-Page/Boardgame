@@ -1,13 +1,25 @@
-<%- include('partials/head', { title: 'Review Sections - ' + game.name }) %>
+<%
+  const isExpansion = typeof expansion !== 'undefined' && expansion;
+  const safeGameId = typeof gameId !== 'undefined' ? gameId : (game && game.id);
+  const subjectName = isExpansion ? expansion.name : game.name;
+  const pasteUrl = isExpansion
+    ? `/games/${safeGameId}/expansions/${expansion.id}/base-rules/paste`
+    : `/games/${game.id}/base-rules/paste`;
+  const saveUrl = isExpansion
+    ? `/games/${safeGameId}/expansions/${expansion.id}/base-rules/save`
+    : `/games/${game.id}/base-rules/save`;
+  const backToSubjectUrl = isExpansion ? `/games/${safeGameId}/expansions/${expansion.id}` : `/games/${game.id}`;
+%>
+<%- include('partials/head', { title: 'Review Sections - ' + subjectName }) %>
 
-<p><a href="/games/<%= game.id %>/base-rules/paste">&larr; Paste different text</a></p>
-<h1>Review Parsed Sections</h1>
+<p><a href="<%= pasteUrl %>">&larr; Paste different text</a></p>
+<h1>Review Parsed Sections<% if (isExpansion) { %> <span class="badge badge-override">expansion</span><% } %></h1>
 <p class="hint">Edit titles/text as needed, remove any junk sections, then save. Blank titles are skipped.</p>
 
 <% if (sections.length === 0) { %>
-  <p class="empty">Couldn't detect any sections. Try pasting again, or <a href="/games/<%= game.id %>">add rules manually</a> on the game page.</p>
+  <p class="empty">Couldn't detect any sections. Try pasting again, or <a href="<%= backToSubjectUrl %>">add rules manually</a> on the page.</p>
 <% } else { %>
-<form method="POST" action="/games/<%= game.id %>/base-rules/save" class="form-card">
+<form method="POST" action="<%= saveUrl %>" class="form-card">
   <% sections.forEach((s, i) => { %>
     <div class="section-edit">
       <input type="text" name="titles" value="<%= s.title %>">

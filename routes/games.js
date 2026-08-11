@@ -37,15 +37,19 @@ router.get('/:id', async (req, res) => {
   const game = gameRows[0];
 
   const { rows: baseSections } = await pool.query(
-    'SELECT * FROM base_rule_sections WHERE game_id = $1 ORDER BY sort_order ASC, id ASC',
+    'SELECT * FROM base_rule_sections WHERE game_id = $1 AND expansion_id IS NULL ORDER BY sort_order ASC, id ASC',
     [id]
   );
   const { rows: houseRules } = await pool.query(
-    'SELECT * FROM house_rules WHERE game_id = $1 ORDER BY sort_order ASC, id ASC',
+    'SELECT * FROM house_rules WHERE game_id = $1 AND expansion_id IS NULL ORDER BY sort_order ASC, id ASC',
+    [id]
+  );
+  const { rows: expansions } = await pool.query(
+    'SELECT * FROM expansions WHERE game_id = $1 ORDER BY name ASC',
     [id]
   );
 
-  res.render('game-detail', { game, baseSections, houseRules });
+  res.render('game-detail', { game, baseSections, houseRules, expansions });
 });
 
 // Edit game info (requires login)

@@ -1,64 +1,52 @@
-<%- include('partials/head', { title: game.name }) %>
+<%- include('partials/head', { title: expansion.name + ' - ' + game.name }) %>
 
-<p><a href="/games">&larr; All games</a></p>
+<p><a href="/games/<%= game.id %>">&larr; Back to <%= game.name %></a></p>
 
 <div class="game-header-row">
-  <% if (game.cover_image_url) { %>
-    <img class="box-art" src="<%= game.cover_image_url %>" alt="<%= game.name %> box art">
+  <% if (expansion.cover_image_url) { %>
+    <img class="box-art" src="<%= expansion.cover_image_url %>" alt="<%= expansion.name %> box art">
   <% } %>
   <div class="game-header-info">
     <div class="game-header">
-      <h1><%= game.name %></h1>
+      <h1><%= expansion.name %> <span class="badge badge-override">expansion of <%= game.name %></span></h1>
       <% if (isAdmin) { %>
       <div class="game-actions">
-        <button class="btn btn-small" onclick="document.getElementById('edit-game').classList.toggle('hidden')">Edit Info</button>
-        <form method="POST" action="/games/<%= game.id %>/delete" onsubmit="return confirm('Delete this game and all its rules?')">
-          <button type="submit" class="btn btn-small btn-danger">Delete Game</button>
+        <button class="btn btn-small" onclick="document.getElementById('edit-expansion').classList.toggle('hidden')">Edit Info</button>
+        <form method="POST" action="/expansions/<%= expansion.id %>/delete" onsubmit="return confirm('Delete this expansion and all its rules?')">
+          <input type="hidden" name="gameId" value="<%= game.id %>">
+          <button type="submit" class="btn btn-small btn-danger">Delete Expansion</button>
         </form>
       </div>
       <% } %>
     </div>
     <p class="meta">
-      <% if (game.genre) { %><%= game.genre %><% } %>
-      <% if (game.min_players || game.max_players) { %> &middot; <%= game.min_players || '?' %>-<%= game.max_players || '?' %> players<% } %>
-      <% if (game.play_time_minutes) { %> &middot; <%= game.play_time_minutes %> min<% } %>
-      <% if (game.publisher) { %> &middot; <%= game.publisher %><% } %>
+      <% if (expansion.min_players || expansion.max_players) { %><%= expansion.min_players || '?' %>-<%= expansion.max_players || '?' %> players<% } %>
+      <% if (expansion.play_time_minutes) { %> &middot; <%= expansion.play_time_minutes %> min<% } %>
     </p>
-    <% if (game.notes) { %><p class="notes"><%= game.notes %></p><% } %>
+    <% if (expansion.notes) { %><p class="notes"><%= expansion.notes %></p><% } %>
   </div>
 </div>
 
 <% if (isAdmin) { %>
-<div id="edit-game" class="form-card hidden">
-  <form method="POST" action="/games/<%= game.id %>/edit">
-    <label>Name<input type="text" name="name" value="<%= game.name %>" required></label>
-    <label>Publisher<input type="text" name="publisher" value="<%= game.publisher || '' %>"></label>
-    <label>Genre
-      <input type="text" name="genre" value="<%= game.genre || '' %>" list="genre-suggestions">
-      <datalist id="genre-suggestions">
-        <option value="Strategy"><option value="Party"><option value="Cooperative">
-        <option value="Card Game"><option value="Family"><option value="Worker Placement">
-        <option value="Deck Building"><option value="Tile Laying">
-      </datalist>
-    </label>
+<div id="edit-expansion" class="form-card hidden">
+  <form method="POST" action="/expansions/<%= expansion.id %>/edit">
+    <input type="hidden" name="gameId" value="<%= game.id %>">
+    <label>Name<input type="text" name="name" value="<%= expansion.name %>" required></label>
     <div class="row">
-      <label>Min players<input type="number" name="min_players" value="<%= game.min_players || '' %>"></label>
-      <label>Max players<input type="number" name="max_players" value="<%= game.max_players || '' %>"></label>
+      <label>Min players<input type="number" name="min_players" value="<%= expansion.min_players || '' %>"></label>
+      <label>Max players<input type="number" name="max_players" value="<%= expansion.max_players || '' %>"></label>
     </div>
-    <label>Play time (minutes)<input type="number" name="play_time_minutes" value="<%= game.play_time_minutes || '' %>"></label>
-    <label>Box art URL
-      <input type="url" name="cover_image_url" value="<%= game.cover_image_url || '' %>" placeholder="https://...">
-    </label>
-    <label>Notes<textarea name="notes" rows="3"><%= game.notes || '' %></textarea></label>
+    <label>Play time (minutes)<input type="number" name="play_time_minutes" value="<%= expansion.play_time_minutes || '' %>"></label>
+    <label>Box art URL<input type="url" name="cover_image_url" value="<%= expansion.cover_image_url || '' %>"></label>
+    <label>Notes<textarea name="notes" rows="3"><%= expansion.notes || '' %></textarea></label>
     <button type="submit" class="btn">Save Changes</button>
   </form>
 </div>
 <% } %>
 
 <div class="tabs">
-  <button class="tab-btn active" data-tab="base">Base Rules (<%= baseSections.length %>)</button>
+  <button class="tab-btn active" data-tab="base">Rules (<%= baseSections.length %>)</button>
   <button class="tab-btn" data-tab="house">House Rules (<%= houseRules.filter(h => h.is_active).length %>/<%= houseRules.length %>)</button>
-  <button class="tab-btn" data-tab="expansions">Expansions (<%= expansions.length %>)</button>
 </div>
 
 <!-- BASE RULES TAB -->
@@ -66,12 +54,12 @@
 
   <% if (isAdmin) { %>
   <div class="panel-actions">
-    <a href="/games/<%= game.id %>/base-rules/paste" class="btn">Paste Rulebook Text</a>
+    <a href="/games/<%= game.id %>/expansions/<%= expansion.id %>/base-rules/paste" class="btn">Paste Rulebook Text</a>
     <button class="btn btn-secondary" onclick="document.getElementById('add-base-form').classList.toggle('hidden')">+ Add Section Manually</button>
   </div>
 
   <div id="add-base-form" class="form-card hidden">
-    <form method="POST" action="/games/<%= game.id %>/base-rules">
+    <form method="POST" action="/games/<%= game.id %>/expansions/<%= expansion.id %>/base-rules">
       <label>Section Title<input type="text" name="title" required></label>
       <label>Rule Text<textarea name="body" rows="4" required></textarea></label>
       <button type="submit" class="btn">Add Section</button>
@@ -80,7 +68,7 @@
   <% } %>
 
   <% if (baseSections.length === 0) { %>
-    <p class="empty">No base rules yet. <% if (isAdmin) { %>Paste the rulebook text above to get started.<% } %></p>
+    <p class="empty">No rules added for this expansion yet. <% if (isAdmin) { %>Paste the rulebook text above to get started.<% } %></p>
   <% } else { %>
 
   <input type="search" id="rule-search" placeholder="Search this rulebook..." class="rule-search" aria-label="Search rules">
@@ -103,14 +91,16 @@
           <div class="rule-body-view"><%= s.body %></div>
           <% if (isAdmin) { %>
           <button class="btn btn-tiny" onclick="this.parentElement.querySelector('.edit-form').classList.toggle('hidden')">Edit</button>
-          <form class="edit-form hidden" method="POST" action="/base-rules/<%= s.id %>/edit">
+          <form class="edit-form hidden" method="POST" action="/expansion-base-rules/<%= s.id %>/edit">
             <input type="hidden" name="gameId" value="<%= game.id %>">
+            <input type="hidden" name="expId" value="<%= expansion.id %>">
             <label>Title<input type="text" name="title" value="<%= s.title %>"></label>
             <label>Body<textarea name="body" rows="6"><%= s.body %></textarea></label>
             <button type="submit" class="btn btn-tiny">Save</button>
           </form>
-          <form method="POST" action="/base-rules/<%= s.id %>/delete" onsubmit="return confirm('Delete this section?')" class="inline-form">
+          <form method="POST" action="/expansion-base-rules/<%= s.id %>/delete" onsubmit="return confirm('Delete this section?')" class="inline-form">
             <input type="hidden" name="gameId" value="<%= game.id %>">
+            <input type="hidden" name="expId" value="<%= expansion.id %>">
             <button type="submit" class="btn btn-tiny btn-danger">Delete</button>
           </form>
           <% } %>
@@ -131,10 +121,10 @@
   </div>
 
   <div id="add-house-form" class="form-card hidden">
-    <form method="POST" action="/games/<%= game.id %>/house-rules">
+    <form method="POST" action="/games/<%= game.id %>/expansions/<%= expansion.id %>/house-rules">
       <label>Title<input type="text" name="title" required></label>
       <label>Rule Text<textarea name="body" rows="4" required></textarea></label>
-      <label>Overrides base section (optional)
+      <label>Overrides a rule section (optional)
         <select name="base_section_id">
           <option value="">-- Standalone house rule --</option>
           <% baseSections.forEach(s => { %>
@@ -148,7 +138,7 @@
   <% } %>
 
   <% if (houseRules.length === 0) { %>
-    <p class="empty">No house rules yet.</p>
+    <p class="empty">No house rules yet for this expansion.</p>
   <% } %>
 
   <% houseRules.forEach(h => { %>
@@ -165,20 +155,23 @@
       <% if (isAdmin) { %>
       <div class="rule-card-actions">
         <button class="btn btn-tiny" onclick="event.preventDefault(); this.closest('.rule-card').querySelector('.edit-form').classList.toggle('hidden')">Edit</button>
-        <form method="POST" action="/house-rules/<%= h.id %>/toggle">
+        <form method="POST" action="/expansion-house-rules/<%= h.id %>/toggle">
           <input type="hidden" name="gameId" value="<%= game.id %>">
+          <input type="hidden" name="expId" value="<%= expansion.id %>">
           <button type="submit" class="btn btn-tiny"><%= h.is_active ? 'Turn Off' : 'Turn On' %></button>
         </form>
-        <form method="POST" action="/house-rules/<%= h.id %>/delete" onsubmit="return confirm('Delete this house rule?')">
+        <form method="POST" action="/expansion-house-rules/<%= h.id %>/delete" onsubmit="return confirm('Delete this house rule?')">
           <input type="hidden" name="gameId" value="<%= game.id %>">
+          <input type="hidden" name="expId" value="<%= expansion.id %>">
           <button type="submit" class="btn btn-tiny btn-danger">Delete</button>
         </form>
       </div>
-      <form class="edit-form hidden" method="POST" action="/house-rules/<%= h.id %>/edit">
+      <form class="edit-form hidden" method="POST" action="/expansion-house-rules/<%= h.id %>/edit">
         <input type="hidden" name="gameId" value="<%= game.id %>">
+        <input type="hidden" name="expId" value="<%= expansion.id %>">
         <label>Title<input type="text" name="title" value="<%= h.title %>"></label>
         <label>Body<textarea name="body" rows="6"><%= h.body %></textarea></label>
-        <label>Overrides base section
+        <label>Overrides a rule section
           <select name="base_section_id">
             <option value="">-- Standalone house rule --</option>
             <% baseSections.forEach(s => { %>
@@ -191,36 +184,6 @@
       <% } %>
     </details>
   <% }) %>
-</div>
-
-<!-- EXPANSIONS TAB -->
-<div class="tab-panel hidden" id="tab-expansions">
-  <% if (isAdmin) { %>
-  <div class="panel-actions">
-    <a href="/games/<%= game.id %>/expansions/new" class="btn">+ Add Expansion</a>
-  </div>
-  <% } %>
-
-  <% if (expansions.length === 0) { %>
-    <p class="empty">No expansions added yet.<% if (isAdmin) { %> Add one above to give it its own rules and house rules.<% } %></p>
-  <% } else { %>
-    <div class="game-grid">
-      <% expansions.forEach(exp => { %>
-        <a class="game-card" href="/games/<%= game.id %>/expansions/<%= exp.id %>">
-          <% if (exp.cover_image_url) { %>
-            <img class="box-art-thumb" src="<%= exp.cover_image_url %>" alt="<%= exp.name %> box art">
-          <% } else { %>
-            <div class="box-art-thumb box-art-placeholder">🎲</div>
-          <% } %>
-          <h2><%= exp.name %></h2>
-          <p class="meta">
-            <% if (exp.min_players || exp.max_players) { %><%= exp.min_players || '?' %>-<%= exp.max_players || '?' %> players<% } %>
-            <% if (exp.play_time_minutes) { %> &middot; <%= exp.play_time_minutes %> min<% } %>
-          </p>
-        </a>
-      <% }) %>
-    </div>
-  <% } %>
 </div>
 
 <script src="/app.js"></script>

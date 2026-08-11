@@ -1,10 +1,19 @@
-<%- include('partials/head', { title: 'Paste Rulebook - ' + game.name }) %>
+<%
+  const isExpansion = typeof expansion !== 'undefined' && expansion;
+  const safeGameId = typeof gameId !== 'undefined' ? gameId : (game && game.id);
+  const subjectName = isExpansion ? expansion.name : game.name;
+  const backUrl = isExpansion ? `/games/${safeGameId}/expansions/${expansion.id}` : `/games/${game.id}`;
+  const actionUrl = isExpansion
+    ? `/games/${safeGameId}/expansions/${expansion.id}/base-rules/parse-preview`
+    : `/games/${game.id}/base-rules/parse-preview`;
+%>
+<%- include('partials/head', { title: 'Paste Rulebook - ' + subjectName }) %>
 
-<p><a href="/games/<%= game.id %>">&larr; Back to <%= game.name %></a></p>
-<h1>Paste Rulebook Text</h1>
+<p><a href="<%= backUrl %>">&larr; Back to <%= subjectName %></a></p>
+<h1>Paste Rulebook Text<% if (isExpansion) { %> <span class="badge badge-override">expansion</span><% } %></h1>
 <p class="hint">Paste the rulebook text (copy from a PDF or website). It'll be split into sections automatically, and you get to review/edit before saving.</p>
 
-<form method="POST" action="/games/<%= game.id %>/base-rules/parse-preview" class="form-card">
+<form method="POST" action="<%= actionUrl %>" class="form-card">
   <textarea name="rawText" rows="20" placeholder="Paste rulebook text here..." required></textarea>
   <button type="submit" class="btn">Parse Rulebook</button>
 </form>
