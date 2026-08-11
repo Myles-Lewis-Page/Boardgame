@@ -1,0 +1,31 @@
+<%- include('partials/head', { title: 'Add to Wishlist' }) %>
+
+<p><a href="/wishlist">&larr; Wishlist</a></p>
+<h1>Add to Wishlist</h1>
+<p class="hint">Fill in what you know now. If you paste the rulebook text below, it's saved as-is and gets split into rule sections automatically the moment you mark this owned, no need to paste it again later.</p>
+
+<form method="POST" action="/wishlist" class="form-card">
+  <label>Name<input type="text" name="name" required></label>
+  <label>Publisher<input type="text" name="publisher"></label>
+  <label>Genre
+    <input type="text" name="genre" list="genre-suggestions" placeholder="e.g. Strategy, Party, Cooperative">
+    <datalist id="genre-suggestions">
+      <option value="Strategy"><option value="Party"><option value="Cooperative">
+      <option value="Card Game"><option value="Family"><option value="Worker Placement">
+      <option value="Deck Building"><option value="Tile Laying">
+    </datalist>
+  </label>
+  <div class="row">
+    <label>Min players<input type="number" name="min_players" min="1"></label>
+    <label>Max players<input type="number" name="max_players" min="1"></label>
+  </div>
+  <label>Play time (minutes)<input type="number" name="play_time_minutes" min="1"></label>
+  <label>Box art URL<input type="url" name="cover_image_url" placeholder="https://..."></label>
+  <label>Notes<textarea name="notes" rows="3"></textarea></label>
+  <label>Rulebook text (optional)
+    <textarea name="rules_text" rows="12" placeholder="Paste the rulebook text here if you have it. It'll be split into sections automatically once you mark this game owned."></textarea>
+  </label>
+  <button type="submit" class="btn">Add to Wishlist</button>
+</form>
+
+<%- include('partials/foot') %>

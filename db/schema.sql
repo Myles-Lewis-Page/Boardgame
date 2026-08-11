@@ -65,3 +65,21 @@ CREATE INDEX IF NOT EXISTS idx_house_rules_expansion ON house_rules(expansion_id
 
 CREATE INDEX IF NOT EXISTS idx_base_rule_sections_game ON base_rule_sections(game_id);
 CREATE INDEX IF NOT EXISTS idx_house_rules_game ON house_rules(game_id);
+
+-- Wishlist: games you don't own yet. Stores the same info as a real game,
+-- plus the raw pasted rulebook text (unparsed) so that converting to an
+-- owned game can split it into base_rule_sections in one step without you
+-- having to paste it again.
+CREATE TABLE IF NOT EXISTS wishlist_games (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  publisher TEXT,
+  genre TEXT,
+  min_players INTEGER,
+  max_players INTEGER,
+  play_time_minutes INTEGER,
+  cover_image_url TEXT,
+  notes TEXT,
+  rules_text TEXT,
+  created_at TIMESTAMP DEFAULT now()
+);

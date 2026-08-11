@@ -37,6 +37,7 @@ app.use('/', require('./routes/auth'));
 app.use('/', require('./routes/importGames')); // must be mounted before games router so /games/import doesn't match games.js's /:id route
 app.use('/', require('./routes/expansions')); // must be mounted before games router for the same reason (/games/:id/expansions/...)
 app.use('/', require('./routes/expansionRules'));
+app.use('/', require('./routes/wishlist'));
 app.use('/games', require('./routes/games'));
 app.use('/', require('./routes/baseRules'));
 app.use('/', require('./routes/houseRules'));

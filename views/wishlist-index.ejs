@@ -1,0 +1,33 @@
+<%- include('partials/head', { title: 'Wishlist' }) %>
+
+<h1>Wishlist</h1>
+<p class="hint">Games you don't own yet. Paste the rulebook text when you add one, and it's ready to go the moment you mark it owned, no re-entering anything.</p>
+
+<% if (isAdmin) { %>
+<p><a href="/wishlist/new" class="btn">+ Add to Wishlist</a></p>
+<% } %>
+
+<% if (wishlistGames.length === 0) { %>
+  <p class="empty">Nothing on the wishlist yet.</p>
+<% } else { %>
+  <div class="game-grid">
+    <% wishlistGames.forEach(g => { %>
+      <a class="game-card" href="/wishlist/<%= g.id %>">
+        <% if (g.cover_image_url) { %>
+          <img class="box-art-thumb" src="<%= g.cover_image_url %>" alt="<%= g.name %> box art">
+        <% } else { %>
+          <div class="box-art-thumb box-art-placeholder">🎲</div>
+        <% } %>
+        <h2><%= g.name %></h2>
+        <p class="meta">
+          <% if (g.genre) { %><%= g.genre %><% } %>
+          <% if (g.min_players || g.max_players) { %> &middot; <%= g.min_players || '?' %>-<%= g.max_players || '?' %> players<% } %>
+          <% if (g.play_time_minutes) { %> &middot; <%= g.play_time_minutes %> min<% } %>
+        </p>
+        <% if (g.rules_text) { %><p class="meta">📖 rules ready</p><% } %>
+      </a>
+    <% }) %>
+  </div>
+<% } %>
+
+<%- include('partials/foot') %>

@@ -1,0 +1,75 @@
+<%- include('partials/head', { title: entry.name + ' (Wishlist)' }) %>
+
+<p><a href="/wishlist">&larr; Wishlist</a></p>
+
+<div class="game-header-row">
+  <% if (entry.cover_image_url) { %>
+    <img class="box-art" src="<%= entry.cover_image_url %>" alt="<%= entry.name %> box art">
+  <% } %>
+  <div class="game-header-info">
+    <div class="game-header">
+      <h1><%= entry.name %> <span class="badge">wishlist</span></h1>
+      <% if (isAdmin) { %>
+      <div class="game-actions">
+        <a href="/wishlist/<%= entry.id %>/edit" class="btn btn-small">Edit</a>
+        <form method="POST" action="/wishlist/<%= entry.id %>/delete" onsubmit="return confirm('Remove this from the wishlist?')">
+          <button type="submit" class="btn btn-small btn-danger">Remove</button>
+        </form>
+      </div>
+      <% } %>
+    </div>
+    <p class="meta">
+      <% if (entry.genre) { %><%= entry.genre %><% } %>
+      <% if (entry.min_players || entry.max_players) { %> &middot; <%= entry.min_players || '?' %>-<%= entry.max_players || '?' %> players<% } %>
+      <% if (entry.play_time_minutes) { %> &middot; <%= entry.play_time_minutes %> min<% } %>
+      <% if (entry.publisher) { %> &middot; <%= entry.publisher %><% } %>
+    </p>
+    <% if (entry.notes) { %><p class="notes"><%= entry.notes %></p><% } %>
+  </div>
+</div>
+
+<% if (isAdmin) { %>
+<div class="form-card convert-card">
+  <p><strong>Ready to buy or already picked it up?</strong></p>
+  <p class="hint">
+    Marking this owned moves it into your games list with everything filled in as-is<% if (previewSections.length > 0) { %>,
+    and creates the <%= previewSections.length %> rule section<%= previewSections.length === 1 ? '' : 's' %> shown below<% } %>.
+    Nothing needs to be re-entered.
+  </p>
+  <form method="POST" action="/wishlist/<%= entry.id %>/convert" onsubmit="return confirm('Move this to your owned games? It will leave the wishlist.')">
+    <button type="submit" class="btn">Mark as Owned</button>
+  </form>
+</div>
+<% } %>
+
+<% if (entry.rules_text) { %>
+  <h2>Rulebook (preview)</h2>
+  <p class="hint">This is how the rulebook text you saved will be split into sections once this is marked owned.</p>
+
+  <% if (previewSections.length === 0) { %>
+    <p class="empty">No sections could be detected in the saved text. It'll still be there to fix once converted.</p>
+  <% } else { %>
+    <div class="rules-layout">
+      <nav class="toc" aria-label="Rule sections">
+        <div class="toc-label">Sections</div>
+        <% previewSections.forEach((s, i) => { %>
+          <a href="#preview-section-<%= i %>" class="toc-link" data-scroll><%= s.title %></a>
+        <% }) %>
+      </nav>
+      <div class="rule-content">
+        <% previewSections.forEach((s, i) => { %>
+          <div class="rule-card" id="preview-section-<%= i %>">
+            <h3><%= s.title %></h3>
+            <div class="rule-body-view"><%= s.body %></div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+<% } else { %>
+  <p class="empty">No rulebook text saved yet. <% if (isAdmin) { %><a href="/wishlist/<%= entry.id %>/edit">Add it</a> so it's ready when you convert this.<% } %></p>
+<% } %>
+
+<script src="/app.js"></script>
+
+<%- include('partials/foot') %>

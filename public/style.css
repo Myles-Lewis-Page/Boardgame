@@ -205,6 +205,11 @@ code {
   .import-row-fields label.span-2 { grid-column: span 2; }
 }
 
+.convert-card {
+  border-color: var(--accent);
+  background: rgba(217, 123, 63, 0.08);
+}
+
 .form-card {
   background: var(--card);
   border: 1px solid var(--border);

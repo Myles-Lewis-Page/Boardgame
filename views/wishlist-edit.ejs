@@ -1,0 +1,30 @@
+<%- include('partials/head', { title: 'Edit Wishlist Entry' }) %>
+
+<p><a href="/wishlist/<%= entry.id %>">&larr; Back to <%= entry.name %></a></p>
+<h1>Edit Wishlist Entry</h1>
+
+<form method="POST" action="/wishlist/<%= entry.id %>/edit" class="form-card">
+  <label>Name<input type="text" name="name" value="<%= entry.name %>" required></label>
+  <label>Publisher<input type="text" name="publisher" value="<%= entry.publisher || '' %>"></label>
+  <label>Genre
+    <input type="text" name="genre" value="<%= entry.genre || '' %>" list="genre-suggestions">
+    <datalist id="genre-suggestions">
+      <option value="Strategy"><option value="Party"><option value="Cooperative">
+      <option value="Card Game"><option value="Family"><option value="Worker Placement">
+      <option value="Deck Building"><option value="Tile Laying">
+    </datalist>
+  </label>
+  <div class="row">
+    <label>Min players<input type="number" name="min_players" value="<%= entry.min_players || '' %>"></label>
+    <label>Max players<input type="number" name="max_players" value="<%= entry.max_players || '' %>"></label>
+  </div>
+  <label>Play time (minutes)<input type="number" name="play_time_minutes" value="<%= entry.play_time_minutes || '' %>"></label>
+  <label>Box art URL<input type="url" name="cover_image_url" value="<%= entry.cover_image_url || '' %>"></label>
+  <label>Notes<textarea name="notes" rows="3"><%= entry.notes || '' %></textarea></label>
+  <label>Rulebook text (optional)
+    <textarea name="rules_text" rows="12"><%= entry.rules_text || '' %></textarea>
+  </label>
+  <button type="submit" class="btn">Save Changes</button>
+</form>
+
+<%- include('partials/foot') %>
