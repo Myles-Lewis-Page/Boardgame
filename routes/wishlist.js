@@ -13,7 +13,7 @@ router.get('/wishlist', async (req, res) => {
      FROM games g
      LEFT JOIN (SELECT game_id, COUNT(*) AS expansion_count FROM expansions GROUP BY game_id) exp_counts
        ON exp_counts.game_id = g.id
-     WHERE g.owned = false
+     WHERE g.owned = false AND g.variant_of_id IS NULL
      ORDER BY g.name ASC`
   );
   const { rows: allCategories } = await pool.query('SELECT * FROM categories');
