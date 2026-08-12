@@ -1,0 +1,49 @@
+<%- include('partials/head', { title: 'Categories' }) %>
+
+<h1>Categories</h1>
+<p class="hint">Organize your collection into a tree, up to <%= maxDepth %> levels deep (e.g. Strategy &gt; Deck Building &gt; Dice-Driven). Assign a category to a game from its Edit form, or bulk-assign many at once via <a href="/games/recategorize">Recategorize from CSV</a>.</p>
+<p class="hint">Need to set box art for a batch of games at once? <a href="/games/update-box-art">Update Box Art from CSV</a>.</p>
+<p class="hint">Have reskinned editions of the same game (like different city Monopolys)? <a href="/games/link-variants">Link Variations from CSV</a>.</p>
+
+<% if (isAdmin) { %>
+<div class="form-card">
+  <form method="POST" action="/categories">
+    <label>New category name<input type="text" name="name" required placeholder="e.g. Dice-Driven"></label>
+    <label>Parent category (optional, leave blank for a top-level category)
+      <select name="parent_id">
+        <option value="">-- Top level --</option>
+        <% eligibleParents.forEach(c => { %>
+          <option value="<%= c.id %>"><%= c.indent %><%= c.name %></option>
+        <% }) %>
+      </select>
+    </label>
+    <button type="submit" class="btn">Add Category</button>
+  </form>
+</div>
+<% } %>
+
+<% if (flat.length === 0) { %>
+  <p class="empty">No categories yet.</p>
+<% } else { %>
+  <div class="category-tree">
+    <% flat.forEach(c => { %>
+      <div class="category-row" style="padding-left: <%= c.depth * 18 %>px">
+        <span class="category-name"><%= c.indent %><%= c.name %></span>
+        <% if (isAdmin) { %>
+        <span class="category-actions">
+          <button class="btn btn-tiny" onclick="document.getElementById('rename-<%= c.id %>').classList.toggle('hidden')">Rename</button>
+          <form method="POST" action="/categories/<%= c.id %>/delete" class="inline-form" onsubmit="return confirm('Delete this category? Any sub-categories under it will be deleted too, and games using it will just lose that category.')">
+            <button type="submit" class="btn btn-tiny btn-danger">Delete</button>
+          </form>
+        </span>
+        <form id="rename-<%= c.id %>" method="POST" action="/categories/<%= c.id %>/edit" class="inline-form hidden category-rename-form">
+          <input type="text" name="name" value="<%= c.name %>" required>
+          <button type="submit" class="btn btn-tiny">Save</button>
+        </form>
+        <% } %>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<%- include('partials/foot') %>

@@ -1,0 +1,11 @@
+<%- include('partials/head', { title: 'Variations Linked' }) %>
+
+<h1>Variations Linked</h1>
+<p><%= updatedCount %> game<%= updatedCount === 1 ? '' : 's' %> linked.</p>
+
+<p>
+  <a href="/games" class="btn">Back to Games</a>
+  <a href="/games/link-variants" class="btn btn-secondary">Link More</a>
+</p>
+
+<%- include('partials/foot') %>

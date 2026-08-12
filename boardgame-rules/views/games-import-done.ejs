@@ -1,0 +1,38 @@
+<%- include('partials/head', { title: 'Import Complete' }) %>
+
+<h1>Import Complete</h1>
+<p>
+  <%= insertedCount %> game<%= insertedCount === 1 ? '' : 's' %> added.<% if (insertedExpansionsCount > 0) { %>
+  <%= insertedExpansionsCount %> expansion<%= insertedExpansionsCount === 1 ? '' : 's' %> added.<% } %><% if (sectionsInsertedCount > 0) { %>
+  <%= sectionsInsertedCount %> rule section<%= sectionsInsertedCount === 1 ? '' : 's' %> created from the rulebook text<% if (sectionsCategorizedCount > 0) { %>, <%= sectionsCategorizedCount %> of them pre-categorized<% } %>.<% } %>
+</p>
+
+<% if (skippedExpansions && skippedExpansions.length > 0) { %>
+  <p class="error">
+    <%= skippedExpansions.length %> row<%= skippedExpansions.length === 1 ? '' : 's' %> couldn't be added as an expansion because the parent game name didn't match anything:
+  </p>
+  <ul>
+    <% skippedExpansions.forEach(s => { %>
+      <li>"<%= s.name %>" was set to expand "<%= s.expansion_of %>", but no game with that exact name was found</li>
+    <% }) %>
+  </ul>
+  <p class="hint">Check the parent game's exact name (case-insensitive is fine, but spelling must match), then re-import just those rows.</p>
+<% } %>
+
+<% if (skippedVariants && skippedVariants.length > 0) { %>
+  <p class="error">
+    <%= skippedVariants.length %> row<%= skippedVariants.length === 1 ? '' : 's' %> couldn't be linked as a variation because the target game name didn't match anything:
+  </p>
+  <ul>
+    <% skippedVariants.forEach(s => { %>
+      <li>"<%= s.name %>" was set as a variation of "<%= s.variant_of %>", but no game with that exact name was found</li>
+    <% }) %>
+  </ul>
+<% } %>
+
+<p>
+  <a href="/games" class="btn">Back to Games</a>
+  <a href="/games/import" class="btn btn-secondary">Import More</a>
+</p>
+
+<%- include('partials/foot') %>

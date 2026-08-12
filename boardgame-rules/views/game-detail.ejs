@@ -1,0 +1,391 @@
+<%- include('partials/head', { title: game.name }) %>
+
+<p><a href="/games">&larr; All games</a></p>
+
+<div class="game-header-row">
+  <% if (game.cover_image_url) { %>
+    <img class="box-art" src="<%= game.cover_image_url %>" alt="<%= game.name %> box art">
+  <% } %>
+  <div class="game-header-info">
+    <div class="game-header">
+      <h1><%= game.name %><% if (!game.owned) { %> <span class="badge badge-wishlist">wishlist</span><% } %></h1>
+      <% if (isAdmin) { %>
+      <div class="game-actions">
+        <% if (!game.owned) { %>
+        <form method="POST" action="/games/<%= game.id %>/mark-owned" class="inline-form">
+          <button type="submit" class="btn btn-small">Mark as Owned</button>
+        </form>
+        <% } %>
+        <button class="btn btn-small" onclick="document.getElementById('edit-game').classList.toggle('hidden')">Edit Info</button>
+        <form method="POST" action="/games/<%= game.id %>/delete" onsubmit="return confirm('Delete this game, its expansions, and all rules?')">
+          <button type="submit" class="btn btn-small btn-danger">Delete Game</button>
+        </form>
+      </div>
+      <% } %>
+    </div>
+    <p class="meta">
+      <% if (game.genre) { %><%= game.genre %><% } %>
+      <% if (game.min_players || game.max_players) { %> &middot; <%= game.min_players || '?' %>-<%= game.max_players || '?' %> players<% } %>
+      <% if (game.play_time_minutes) { %> &middot; <%= game.play_time_minutes %> min<% } %>
+      <% if (game.publisher) { %> &middot; <%= game.publisher %><% } %>
+      <% if (expansions.length > 0) { %> &middot; <%= expansions.length %> expansion<%= expansions.length === 1 ? '' : 's' %><% } %>
+    </p>
+    <% if (categoryPath) { %><p class="meta category-path-line">📁 <%= categoryPath %></p><% } %>
+    <% if (variantOf) { %><p class="meta category-path-line">🔀 Variation of <a href="/games/<%= variantOf.id %>"><%= variantOf.name %></a></p><% } %>
+    <% if (variations.length > 0) { %>
+    <p class="meta category-path-line">🔀 Variations:
+      <% variations.forEach((v, i) => { %><a href="/games/<%= v.id %>"><%= v.name %></a><%= v.owned ? '' : ' (wishlist)' %><%= i < variations.length - 1 ? ', ' : '' %><% }) %>
+    </p>
+    <% } %>
+    <% if (game.notes) { %><p class="notes"><%= game.notes %></p><% } %>
+  </div>
+</div>
+
+<% if (isAdmin && variantOf && allSections.length === 0) { %>
+<div class="form-card convert-card">
+  <p><strong>This is a variation of <%= variantOf.name %>.</strong> If the rules are the same (or close), you can copy them over instead of pasting them again.</p>
+  <form method="POST" action="/games/<%= game.id %>/copy-rules-from-variant">
+    <input type="hidden" name="sourceGameId" value="<%= variantOf.id %>">
+    <button type="submit" class="btn">Copy Rules from <%= variantOf.name %></button>
+  </form>
+</div>
+<% } %>
+
+<% if (isAdmin) { %>
+<div id="edit-game" class="form-card hidden">
+  <form method="POST" action="/games/<%= game.id %>/edit">
+    <label class="checkbox-label">
+      <input type="checkbox" name="owned" <%= game.owned ? 'checked' : '' %>>
+      I own this
+    </label>
+    <label>Name<input type="text" name="name" value="<%= game.name %>" required></label>
+    <label>Publisher<input type="text" name="publisher" value="<%= game.publisher || '' %>"></label>
+    <label>Genre
+      <input type="text" name="genre" value="<%= game.genre || '' %>" list="genre-suggestions">
+      <datalist id="genre-suggestions">
+        <option value="Strategy"><option value="Party"><option value="Cooperative">
+        <option value="Card Game"><option value="Family"><option value="Worker Placement">
+        <option value="Deck Building"><option value="Tile Laying">
+      </datalist>
+    </label>
+    <div class="row">
+      <label>Min players<input type="number" name="min_players" value="<%= game.min_players || '' %>"></label>
+      <label>Max players<input type="number" name="max_players" value="<%= game.max_players || '' %>"></label>
+    </div>
+    <label>Play time (minutes)<input type="number" name="play_time_minutes" value="<%= game.play_time_minutes || '' %>"></label>
+    <label>Category (optional)
+      <select name="category_id">
+        <option value="">-- None --</option>
+        <% categoryOptions.forEach(c => { %>
+          <option value="<%= c.id %>" <%= game.category_id === c.id ? 'selected' : '' %>><%= c.indent %><%= c.name %></option>
+        <% }) %>
+      </select>
+      <a href="/categories" class="hint">Manage categories</a>
+    </label>
+    <label>Box art URL<input type="url" name="cover_image_url" value="<%= game.cover_image_url || '' %>"></label>
+    <label>Variation of (optional)
+      <select name="variant_of_id">
+        <option value="">-- Not a variation of anything --</option>
+        <% variantOptions.forEach(v => { %>
+          <option value="<%= v.id %>" <%= game.variant_of_id === v.id ? 'selected' : '' %>><%= v.name %></option>
+        <% }) %>
+      </select>
+    </label>
+    <label>Notes<textarea name="notes" rows="3"><%= game.notes || '' %></textarea></label>
+    <button type="submit" class="btn">Save Changes</button>
+  </form>
+</div>
+<% } %>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="rules">Rules (<%= allSections.length %>)</button>
+  <button class="tab-btn" data-tab="house">House Rules (<%= allHouseRules.filter(h => h.is_active).length %>/<%= allHouseRules.length %>)</button>
+  <button class="tab-btn" data-tab="expansions">Expansions (<%= expansions.length %>)</button>
+</div>
+
+<% if (expansions.length > 0) { %>
+<div class="playing-with-bar">
+  <span class="playing-with-label">Playing with:</span>
+  <% sources.forEach(src => { %>
+    <label class="source-chip">
+      <input type="checkbox" class="source-filter-checkbox" data-source="<%= src.key %>" checked>
+      <%= src.label %>
+    </label>
+  <% }) %>
+</div>
+<p class="hint">Uncheck an expansion to hide its rules and house rules below, for nights you're playing the base game only.</p>
+<% } %>
+
+<!-- RULES TAB -->
+<div class="tab-panel" id="tab-rules">
+
+  <% if (isAdmin) { %>
+  <div class="panel-actions add-rules-bar">
+    <label class="add-target-label">Add rules for:
+      <select id="rules-add-target">
+        <% sources.forEach(src => { %>
+          <option value="<%= src.key %>" data-expansion-id="<%= src.expansionId || '' %>"><%= src.label %><%= src.isBase ? ' (base game)' : '' %></option>
+        <% }) %>
+      </select>
+    </label>
+    <a id="paste-rulebook-link" href="/games/<%= game.id %>/base-rules/paste" class="btn">Paste Rulebook Text</a>
+    <button class="btn btn-secondary" onclick="document.getElementById('add-section-form').classList.toggle('hidden')">+ Add Section Manually</button>
+    <a href="/games/recategorize-sections" class="btn btn-secondary btn-small">Bulk Recategorize Sections</a>
+  </div>
+
+  <div id="add-section-form" class="form-card hidden">
+    <form id="add-section-form-el" method="POST" action="/games/<%= game.id %>/base-rules">
+      <label>Section Title<input type="text" name="title" required></label>
+      <label>Rule Text<textarea name="body" rows="4" required></textarea></label>
+      <label>Rule category (optional, up to 4 levels)
+        <input type="text" name="rule_category_path" placeholder="e.g. Gameplay > Development Cards > Knight Cards">
+      </label>
+      <button type="submit" class="btn">Add Section</button>
+    </form>
+  </div>
+  <% } %>
+
+  <% if (allSections.length === 0) { %>
+    <p class="empty">No rules added yet. <% if (isAdmin) { %>Paste the rulebook text above to get started.<% } %></p>
+  <% } else { %>
+
+  <input type="search" id="rule-search" placeholder="Search all rules (base game + expansions)..." class="rule-search" aria-label="Search rules">
+
+  <div class="rules-layout">
+    <nav class="toc" aria-label="Rule sections">
+      <div class="toc-label">Sections</div>
+      <% sources.forEach(src => {
+        const sectionsForSrc = allSections.filter(s => (src.isBase ? s.expansion_id === null : s.expansion_id === src.expansionId));
+        if (sectionsForSrc.length === 0) return;
+
+        const catRowsForSrc = allRuleCategories.filter(c => (src.isBase ? c.expansion_id === null : c.expansion_id === src.expansionId));
+        const catTree = buildRuleCategoryTree(catRowsForSrc);
+        const sectionsByCategory = new Map();
+        sectionsForSrc.forEach(s => {
+          if (!s.rule_category_id) return;
+          if (!sectionsByCategory.has(s.rule_category_id)) sectionsByCategory.set(s.rule_category_id, []);
+          sectionsByCategory.get(s.rule_category_id).push(s);
+        });
+        const uncategorized = sectionsForSrc.filter(s => !s.rule_category_id);
+      %>
+        <% if (expansions.length > 0) { %><div class="toc-subheader" data-source="<%= src.key %>"><%= src.label %></div><% } %>
+        <% uncategorized.forEach(s => { %>
+          <a href="#section-<%= s.id %>" class="toc-link" data-source="<%= src.key %>" data-scroll><%= s.title %></a>
+        <% }) %>
+        <% catTree.forEach(node => { %>
+          <%- include('partials/rule-category-toc-node', { node, sectionsByCategory, sourceKey: src.key }) %>
+        <% }) %>
+      <% }) %>
+      <% if (allHouseRules.length > 0) { %>
+        <a href="#house-rules-anchor" class="toc-link toc-house" data-scroll>House Rules</a>
+      <% } %>
+    </nav>
+
+    <div class="rule-content">
+      <% sources.forEach(src => {
+        const sectionsForSrc = allSections.filter(s => (src.isBase ? s.expansion_id === null : s.expansion_id === src.expansionId));
+        if (sectionsForSrc.length === 0) return;
+
+        const catRowsForSrc = allRuleCategories.filter(c => (src.isBase ? c.expansion_id === null : c.expansion_id === src.expansionId));
+        const catTree = buildRuleCategoryTree(catRowsForSrc);
+        const sectionsByCategory = new Map();
+        sectionsForSrc.forEach(s => {
+          if (!s.rule_category_id) return;
+          if (!sectionsByCategory.has(s.rule_category_id)) sectionsByCategory.set(s.rule_category_id, []);
+          sectionsByCategory.get(s.rule_category_id).push(s);
+        });
+        const uncategorized = sectionsForSrc.filter(s => !s.rule_category_id);
+      %>
+        <% if (expansions.length > 0) { %><h2 class="source-group-header" data-source="<%= src.key %>"><%= src.label %></h2><% } %>
+        <% if (isAdmin && catRowsForSrc.length > 0) { %>
+          <datalist id="rule-cat-suggestions-<%= src.key %>">
+            <% catRowsForSrc.forEach(c => { %>
+              <option value="<%= pathForRuleCategoryId(c.id, catRowsForSrc) %>">
+            <% }) %>
+          </datalist>
+        <% } %>
+        <% uncategorized.forEach(s => { %>
+          <%- include('partials/rule-section-card', { s, isAdmin, gameId: game.id, sourceKey: src.key }) %>
+        <% }) %>
+        <% catTree.forEach(node => { %>
+          <%- include('partials/rule-category-node', { node, sectionsByCategory, isAdmin, gameId: game.id, sourceKey: src.key }) %>
+        <% }) %>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+</div>
+
+<!-- HOUSE RULES TAB -->
+<div class="tab-panel hidden" id="tab-house">
+  <a id="house-rules-anchor"></a>
+
+  <% if (isAdmin) { %>
+  <div class="panel-actions">
+    <button class="btn" onclick="document.getElementById('add-house-form').classList.toggle('hidden')">+ Add House Rule</button>
+  </div>
+
+  <div id="add-house-form" class="form-card hidden">
+    <form id="add-house-form-el" method="POST" action="/games/<%= game.id %>/house-rules">
+      <label>Applies to:
+        <select id="house-add-target">
+          <% sources.forEach(src => { %>
+            <option value="<%= src.key %>" data-expansion-id="<%= src.expansionId || '' %>"><%= src.label %><%= src.isBase ? ' (base game)' : '' %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>Title<input type="text" name="title" required></label>
+      <label>Rule Text<textarea name="body" rows="4" required></textarea></label>
+      <label>Overrides a rule section (optional)
+        <select name="base_section_id">
+          <option value="">-- Standalone house rule --</option>
+          <% sources.forEach(src => {
+            const sectionsForSrc = allSections.filter(s => (src.isBase ? s.expansion_id === null : s.expansion_id === src.expansionId));
+          %>
+            <% sectionsForSrc.forEach(s => { %>
+              <option value="<%= s.id %>">[<%= src.label %>] <%= s.title %></option>
+            <% }) %>
+          <% }) %>
+        </select>
+      </label>
+      <button type="submit" class="btn">Add House Rule</button>
+    </form>
+  </div>
+  <% } %>
+
+  <% if (allHouseRules.length === 0) { %>
+    <p class="empty">No house rules yet.</p>
+  <% } %>
+
+  <% sources.forEach(src => {
+    const rulesForSrc = allHouseRules.filter(h => (src.isBase ? h.expansion_id === null : h.expansion_id === src.expansionId));
+    if (rulesForSrc.length === 0) return;
+  %>
+    <% if (expansions.length > 0) { %><h2 class="source-group-header" data-source="<%= src.key %>"><%= src.label %></h2><% } %>
+    <% rulesForSrc.forEach(h => { %>
+      <details class="rule-card <%= h.is_active ? '' : 'inactive' %>" data-source="<%= src.key %>">
+        <summary>
+          <%= h.title %>
+          <% if (!h.is_active) { %><span class="badge">off</span><% } %>
+          <% if (h.base_section_id) {
+            const base = allSections.find(b => b.id === h.base_section_id);
+            if (base) { %><span class="badge badge-override">overrides: <%= base.title %></span><% }
+          } %>
+        </summary>
+        <div class="rule-body-view"><%= h.body %></div>
+        <% if (isAdmin) {
+          const isExp = h.expansion_id !== null;
+          const toggleAction = isExp ? `/expansion-house-rules/${h.id}/toggle` : `/house-rules/${h.id}/toggle`;
+          const deleteAction = isExp ? `/expansion-house-rules/${h.id}/delete` : `/house-rules/${h.id}/delete`;
+          const editAction = isExp ? `/expansion-house-rules/${h.id}/edit` : `/house-rules/${h.id}/edit`;
+        %>
+        <div class="rule-card-actions">
+          <button class="btn btn-tiny" onclick="event.preventDefault(); this.closest('.rule-card').querySelector('.edit-form').classList.toggle('hidden')">Edit</button>
+          <form method="POST" action="<%= toggleAction %>">
+            <input type="hidden" name="gameId" value="<%= game.id %>">
+            <button type="submit" class="btn btn-tiny"><%= h.is_active ? 'Turn Off' : 'Turn On' %></button>
+          </form>
+          <form method="POST" action="<%= deleteAction %>" onsubmit="return confirm('Delete this house rule?')">
+            <input type="hidden" name="gameId" value="<%= game.id %>">
+            <button type="submit" class="btn btn-tiny btn-danger">Delete</button>
+          </form>
+        </div>
+        <form class="edit-form hidden" method="POST" action="<%= editAction %>">
+          <input type="hidden" name="gameId" value="<%= game.id %>">
+          <label>Title<input type="text" name="title" value="<%= h.title %>"></label>
+          <label>Body<textarea name="body" rows="6"><%= h.body %></textarea></label>
+          <label>Overrides a rule section
+            <select name="base_section_id">
+              <option value="">-- Standalone house rule --</option>
+              <% sources.forEach(s2 => {
+                const secs = allSections.filter(s => (s2.isBase ? s.expansion_id === null : s.expansion_id === s2.expansionId));
+              %>
+                <% secs.forEach(s => { %>
+                  <option value="<%= s.id %>" <%= h.base_section_id === s.id ? 'selected' : '' %>>[<%= s2.label %>] <%= s.title %></option>
+                <% }) %>
+              <% }) %>
+            </select>
+          </label>
+          <button type="submit" class="btn btn-tiny">Save</button>
+        </form>
+        <% } %>
+      </details>
+    <% }) %>
+  <% }) %>
+</div>
+
+<!-- EXPANSIONS TAB -->
+<div class="tab-panel hidden" id="tab-expansions">
+  <% if (isAdmin) { %>
+  <div class="panel-actions">
+    <button class="btn" onclick="document.getElementById('add-expansion-form').classList.toggle('hidden')">+ Add Expansion</button>
+  </div>
+
+  <div id="add-expansion-form" class="form-card hidden">
+    <form method="POST" action="/games/<%= game.id %>/expansions">
+      <label>Expansion Name<input type="text" name="name" required placeholder="e.g. Seafarers, Rails &amp; Sails"></label>
+      <div class="row">
+        <label>Min players<input type="number" name="min_players" min="1" placeholder="leave blank to match base game"></label>
+        <label>Max players<input type="number" name="max_players" min="1"></label>
+      </div>
+      <label>Play time (minutes)<input type="number" name="play_time_minutes" min="1"></label>
+      <label>Box art URL<input type="url" name="cover_image_url" placeholder="https://..."></label>
+      <label>Notes<textarea name="notes" rows="3"></textarea></label>
+      <button type="submit" class="btn">Add Expansion</button>
+    </form>
+  </div>
+  <% } %>
+
+  <% if (expansions.length === 0) { %>
+    <p class="empty">No expansions added yet.<% if (isAdmin) { %> Add one above, then paste its rulebook right from the Rules tab.<% } %></p>
+  <% } else { %>
+    <% expansions.forEach(exp => {
+      const sectionCount = allSections.filter(s => s.expansion_id === exp.id).length;
+      const houseRuleCount = allHouseRules.filter(h => h.expansion_id === exp.id).length;
+    %>
+      <div class="rule-card expansion-manage-card">
+        <div class="expansion-manage-header">
+          <% if (exp.cover_image_url) { %>
+            <img class="box-art-thumb expansion-thumb" src="<%= exp.cover_image_url %>" alt="<%= exp.name %> box art">
+          <% } %>
+          <div>
+            <h3><%= exp.name %></h3>
+            <p class="meta">
+              <% if (exp.min_players || exp.max_players) { %><%= exp.min_players || '?' %>-<%= exp.max_players || '?' %> players<% } %>
+              <% if (exp.play_time_minutes) { %> &middot; <%= exp.play_time_minutes %> min<% } %>
+              &middot; <%= sectionCount %> rule section<%= sectionCount === 1 ? '' : 's' %>
+              &middot; <%= houseRuleCount %> house rule<%= houseRuleCount === 1 ? '' : 's' %>
+            </p>
+            <% if (exp.notes) { %><p class="notes"><%= exp.notes %></p><% } %>
+          </div>
+        </div>
+        <% if (isAdmin) { %>
+        <div class="rule-card-actions">
+          <a href="/games/<%= game.id %>/expansions/<%= exp.id %>/base-rules/paste" class="btn btn-tiny">Paste Rulebook</a>
+          <button class="btn btn-tiny" onclick="this.closest('.expansion-manage-card').querySelector('.edit-form').classList.toggle('hidden')">Edit Info</button>
+          <form method="POST" action="/expansions/<%= exp.id %>/delete" onsubmit="return confirm('Delete this expansion and all its rules?')">
+            <input type="hidden" name="gameId" value="<%= game.id %>">
+            <button type="submit" class="btn btn-tiny btn-danger">Delete</button>
+          </form>
+        </div>
+        <form class="edit-form hidden" method="POST" action="/expansions/<%= exp.id %>/edit">
+          <input type="hidden" name="gameId" value="<%= game.id %>">
+          <label>Name<input type="text" name="name" value="<%= exp.name %>" required></label>
+          <div class="row">
+            <label>Min players<input type="number" name="min_players" value="<%= exp.min_players || '' %>"></label>
+            <label>Max players<input type="number" name="max_players" value="<%= exp.max_players || '' %>"></label>
+          </div>
+          <label>Play time (minutes)<input type="number" name="play_time_minutes" value="<%= exp.play_time_minutes || '' %>"></label>
+          <label>Box art URL<input type="url" name="cover_image_url" value="<%= exp.cover_image_url || '' %>"></label>
+          <label>Notes<textarea name="notes" rows="3"><%= exp.notes || '' %></textarea></label>
+          <button type="submit" class="btn btn-tiny">Save</button>
+        </form>
+        <% } %>
+      </div>
+    <% }) %>
+  <% } %>
+</div>
+
+<script src="/app.js"></script>
+
+<%- include('partials/foot') %>
