@@ -57,6 +57,13 @@ async function ensureSchema() {
 }
 
 ensureSchema()
+  .then(async () => {
+    const { migrateWishlistIntoGames } = require('./db/migrateWishlist');
+    const { migrated, skipped } = await migrateWishlistIntoGames(pool);
+    if (migrated || skipped) {
+      console.log(`Wishlist migration: ${migrated} entries moved into games (owned=false), ${skipped} skipped (name already existed).`);
+    }
+  })
   .then(() => {
     app.listen(PORT, () => console.log(`Board game rules app running on port ${PORT}`));
   })

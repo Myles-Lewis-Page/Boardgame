@@ -12,8 +12,9 @@ async function getCategorySelectOptions() {
   return { flat: flattenForSelect(tree), allRows: rows };
 }
 
-// List all games (public) - sort/filter/search happens client-side in the
-// browser via embedded JSON, so it's instant on an iPad with no reloads.
+// List all games (public) - defaults to owned games only, since that's your
+// actual shelf; wishlist entries (owned=false) get their own filtered page.
+// Sort/filter/search happens client-side via embedded JSON, so it's instant.
 router.get('/', async (req, res) => {
   const { rows: games } = await pool.query(`
     SELECT g.*, COALESCE(exp_counts.expansion_count, 0) AS expansion_count
@@ -21,10 +22,11 @@ router.get('/', async (req, res) => {
     LEFT JOIN (
       SELECT game_id, COUNT(*) AS expansion_count FROM expansions GROUP BY game_id
     ) exp_counts ON exp_counts.game_id = g.id
+    WHERE g.owned = true
     ORDER BY g.name ASC
   `);
   const { rows: genreRows } = await pool.query(
-    "SELECT DISTINCT genre FROM games WHERE genre IS NOT NULL AND genre <> '' ORDER BY genre ASC"
+    "SELECT DISTINCT genre FROM games WHERE owned = true AND genre IS NOT NULL AND genre <> '' ORDER BY genre ASC"
   );
   const { flat: categoryOptions, allRows: allCategoryRows } = await getCategorySelectOptions();
 
@@ -47,16 +49,17 @@ router.get('/', async (req, res) => {
 // New game form (requires login)
 router.get('/new', requireAuth, async (req, res) => {
   const { flat: categoryOptions } = await getCategorySelectOptions();
-  res.render('new-game', { categoryOptions });
+  const defaultOwned = req.query.owned !== 'false'; // ?owned=false pre-unchecks it (used by the Wishlist "+ Add" button)
+  res.render('new-game', { categoryOptions, defaultOwned });
 });
 
 // Create game (requires login)
 router.post('/', requireAuth, async (req, res) => {
-  const { name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, category_id } = req.body;
+  const { name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, category_id, owned } = req.body;
   const { rows } = await pool.query(
-    `INSERT INTO games (name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, category_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
-    [name, publisher || null, genre || null, min_players || null, max_players || null, play_time_minutes || null, cover_image_url || null, notes || null, category_id || null]
+    `INSERT INTO games (name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, category_id, owned)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
+    [name, publisher || null, genre || null, min_players || null, max_players || null, play_time_minutes || null, cover_image_url || null, notes || null, category_id || null, !!owned]
   );
   res.redirect(`/games/${rows[0].id}`);
 });
@@ -121,12 +124,20 @@ router.get('/:id', async (req, res) => {
 // Edit game info (requires login)
 router.post('/:id/edit', requireAuth, async (req, res) => {
   const { id } = req.params;
-  const { name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, category_id } = req.body;
+  const { name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, category_id, owned } = req.body;
   await pool.query(
-    `UPDATE games SET name=$1, publisher=$2, genre=$3, min_players=$4, max_players=$5, play_time_minutes=$6, cover_image_url=$7, notes=$8, category_id=$9 WHERE id=$10`,
-    [name, publisher || null, genre || null, min_players || null, max_players || null, play_time_minutes || null, cover_image_url || null, notes || null, category_id || null, id]
+    `UPDATE games SET name=$1, publisher=$2, genre=$3, min_players=$4, max_players=$5, play_time_minutes=$6, cover_image_url=$7, notes=$8, category_id=$9, owned=$10 WHERE id=$11`,
+    [name, publisher || null, genre || null, min_players || null, max_players || null, play_time_minutes || null, cover_image_url || null, notes || null, category_id || null, !!owned, id]
   );
   res.redirect(`/games/${id}`);
+});
+
+// Quick "mark owned" action from the wishlist/game page - just flips the
+// flag, no data copying needed since wishlist and owned games share the
+// same row and the same rules/expansions/house rules all along.
+router.post('/:id/mark-owned', requireAuth, async (req, res) => {
+  await pool.query('UPDATE games SET owned = true WHERE id = $1', [req.params.id]);
+  res.redirect(`/games/${req.params.id}`);
 });
 
 // Delete game (requires login)

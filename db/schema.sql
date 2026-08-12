@@ -16,6 +16,12 @@ ALTER TABLE games ADD COLUMN IF NOT EXISTS genre TEXT;
 ALTER TABLE games ADD COLUMN IF NOT EXISTS play_time_minutes INTEGER;
 ALTER TABLE games ADD COLUMN IF NOT EXISTS cover_image_url TEXT;
 
+-- "owned" replaces the separate wishlist_games table: a game you don't own
+-- yet is just a row here with owned = false. Marking it owned is a single
+-- column flip instead of copying data between tables.
+ALTER TABLE games ADD COLUMN IF NOT EXISTS owned BOOLEAN NOT NULL DEFAULT true;
+CREATE INDEX IF NOT EXISTS idx_games_owned ON games(owned);
+
 -- Expansions: each belongs to a parent game. Their rules (base + house)
 -- live in the same tables as the parent game's rules, scoped by expansion_id.
 CREATE TABLE IF NOT EXISTS expansions (
@@ -66,28 +72,6 @@ CREATE INDEX IF NOT EXISTS idx_house_rules_expansion ON house_rules(expansion_id
 CREATE INDEX IF NOT EXISTS idx_base_rule_sections_game ON base_rule_sections(game_id);
 CREATE INDEX IF NOT EXISTS idx_house_rules_game ON house_rules(game_id);
 
--- Wishlist: games you don't own yet. Stores the same info as a real game,
--- plus the raw pasted rulebook text (unparsed) so that converting to an
--- owned game can split it into base_rule_sections in one step without you
--- having to paste it again.
-CREATE TABLE IF NOT EXISTS wishlist_games (
-  id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  publisher TEXT,
-  genre TEXT,
-  min_players INTEGER,
-  max_players INTEGER,
-  play_time_minutes INTEGER,
-  cover_image_url TEXT,
-  notes TEXT,
-  rules_text TEXT,
-  rule_categories TEXT,
-  created_at TIMESTAMP DEFAULT now()
-);
-
--- Upgrade path for wishlist entries created before rule_categories existed.
-ALTER TABLE wishlist_games ADD COLUMN IF NOT EXISTS rule_categories TEXT;
-
 -- Categories: a self-referencing tree, up to 4 levels deep (depth 1-4).
 -- This is separate from the free-text "genre" field - genre stays a quick
 -- flat tag, categories are for deliberately organizing a growing collection
@@ -103,7 +87,6 @@ CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_id);
 
 ALTER TABLE games ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL;
 ALTER TABLE expansions ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL;
-ALTER TABLE wishlist_games ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_games_category ON games(category_id);
 CREATE INDEX IF NOT EXISTS idx_expansions_category ON expansions(category_id);
 

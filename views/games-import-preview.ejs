@@ -24,6 +24,10 @@
             <input type="checkbox" name="include" value="<%= i %>" <%= g.errors.length ? '' : 'checked' %>>
             Row <%= g.row_number %>
           </label>
+          <select name="owned" class="owned-select">
+            <option value="true" <%= g.owned ? 'selected' : '' %>>Owned</option>
+            <option value="false" <%= !g.owned ? 'selected' : '' %>>Wishlist</option>
+          </select>
           <% if (g.errors.length) { %><span class="row-error-msg"><%= g.errors.join(', ') %></span><% } %>
         </div>
 

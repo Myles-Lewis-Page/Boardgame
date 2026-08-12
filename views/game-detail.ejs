@@ -8,9 +8,14 @@
   <% } %>
   <div class="game-header-info">
     <div class="game-header">
-      <h1><%= game.name %></h1>
+      <h1><%= game.name %><% if (!game.owned) { %> <span class="badge badge-wishlist">wishlist</span><% } %></h1>
       <% if (isAdmin) { %>
       <div class="game-actions">
+        <% if (!game.owned) { %>
+        <form method="POST" action="/games/<%= game.id %>/mark-owned" class="inline-form">
+          <button type="submit" class="btn btn-small">Mark as Owned</button>
+        </form>
+        <% } %>
         <button class="btn btn-small" onclick="document.getElementById('edit-game').classList.toggle('hidden')">Edit Info</button>
         <form method="POST" action="/games/<%= game.id %>/delete" onsubmit="return confirm('Delete this game, its expansions, and all rules?')">
           <button type="submit" class="btn btn-small btn-danger">Delete Game</button>
@@ -33,6 +38,10 @@
 <% if (isAdmin) { %>
 <div id="edit-game" class="form-card hidden">
   <form method="POST" action="/games/<%= game.id %>/edit">
+    <label class="checkbox-label">
+      <input type="checkbox" name="owned" <%= game.owned ? 'checked' : '' %>>
+      I own this
+    </label>
     <label>Name<input type="text" name="name" value="<%= game.name %>" required></label>
     <label>Publisher<input type="text" name="publisher" value="<%= game.publisher || '' %>"></label>
     <label>Genre

@@ -3,6 +3,10 @@
 <h1>Add a Game</h1>
 
 <form method="POST" action="/games" class="form-card">
+  <label class="checkbox-label">
+    <input type="checkbox" name="owned" <%= defaultOwned ? 'checked' : '' %>>
+    I own this (uncheck to add to the Wishlist instead)
+  </label>
   <label>Name<input type="text" name="name" required></label>
   <label>Publisher<input type="text" name="publisher"></label>
   <label>Genre

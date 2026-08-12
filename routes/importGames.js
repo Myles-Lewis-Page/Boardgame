@@ -37,7 +37,7 @@ router.post('/games/import/preview', requireAuth, (req, res) => {
 router.post('/games/import/save', requireAuth, async (req, res) => {
   let {
     name, publisher, genre, min_players, max_players, play_time_minutes,
-    cover_image_url, notes, rules_text, expansion_of, category_path, rule_categories, include
+    cover_image_url, notes, rules_text, expansion_of, category_path, rule_categories, owned, include
   } = req.body;
 
   const toArray = v => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
@@ -53,6 +53,7 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
   expansion_of = toArray(expansion_of);
   category_path = toArray(category_path);
   rule_categories = toArray(rule_categories);
+  owned = toArray(owned);
   const includeSet = new Set(toArray(include));
 
   const client = await pool.connect();
@@ -114,8 +115,8 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
       }
 
       const { rows } = await client.query(
-        `INSERT INTO games (name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, category_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+        `INSERT INTO games (name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, category_id, owned)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
         [
           name[i].trim(),
           publisher[i] || null,
@@ -125,7 +126,8 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
           play_time_minutes[i] ? parseInt(play_time_minutes[i], 10) : null,
           cover_image_url[i] || null,
           notes[i] || null,
-          categoryId
+          categoryId,
+          owned[i] !== 'false'
         ]
       );
       insertedGamesCount++;

@@ -292,6 +292,20 @@ code {
 }
 .expansion-manage-header h3 { margin: 0 0 4px; }
 
+.checkbox-label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+.checkbox-label input { min-height: auto; width: auto; }
+
+.badge-wishlist {
+  background: rgba(217, 123, 63, 0.18);
+  color: var(--accent);
+}
+
 /* Category path shown on cards / game pages */
 .category-path-line {
   font-size: 0.78rem;

@@ -1,12 +1,12 @@
 <%- include('partials/head', { title: 'Wishlist' }) %>
 
 <h1>Wishlist</h1>
-<p class="hint">Games you don't own yet. Paste the rulebook text when you add one, and it's ready to go the moment you mark it owned, no re-entering anything.</p>
+<p class="hint">Games you don't own yet - same everything (rules, expansions, house rules) as an owned game, just tagged not-owned. Mark one owned from its own page whenever you actually get it.</p>
 
 <% if (isAdmin) { %>
 <p>
-  <a href="/wishlist/new" class="btn">+ Add to Wishlist</a>
-  <a href="/wishlist/import" class="btn btn-secondary">Import from CSV</a>
+  <a href="/games/new?owned=false" class="btn">+ Add to Wishlist</a>
+  <a href="/games/import" class="btn btn-secondary">Import from CSV</a>
 </p>
 <% } %>
 
@@ -15,7 +15,7 @@
 <% } else { %>
   <div class="game-grid">
     <% wishlistGames.forEach(g => { %>
-      <a class="game-card" href="/wishlist/<%= g.id %>">
+      <a class="game-card" href="/games/<%= g.id %>">
         <% if (g.cover_image_url) { %>
           <img class="box-art-thumb" src="<%= g.cover_image_url %>" alt="<%= g.name %> box art">
         <% } else { %>
@@ -26,8 +26,8 @@
           <% if (g.genre) { %><%= g.genre %><% } %>
           <% if (g.min_players || g.max_players) { %> &middot; <%= g.min_players || '?' %>-<%= g.max_players || '?' %> players<% } %>
           <% if (g.play_time_minutes) { %> &middot; <%= g.play_time_minutes %> min<% } %>
+          <% if (g.expansion_count > 0) { %> &middot; <%= g.expansion_count %> expansion<%= g.expansion_count === 1 ? '' : 's' %><% } %>
         </p>
-        <% if (g.rules_text) { %><p class="meta">📖 rules ready</p><% } %>
         <% if (g.category_path) { %><p class="meta category-path-line">📁 <%= g.category_path %></p><% } %>
       </a>
     <% }) %>

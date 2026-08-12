@@ -3,9 +3,16 @@
 <p><a href="/games">&larr; All games</a></p>
 <h1>Import Games</h1>
 <p class="hint">
-  Upload or paste a CSV to add many games at once. Columns:
-  <code>name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, rules_text, expansion_of</code>
+  Upload or paste a CSV to add many games at once &mdash; owned games and wishlist games use this same
+  import, there's no separate wishlist upload anymore. Columns:
+  <code>name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, rules_text, expansion_of, category_path, rule_categories, owned</code>
   &mdash; only <code>name</code> is required, leave the rest blank if you don't have it.
+</p>
+<p class="hint">
+  <code>owned</code> is optional: leave it blank or put <code>true</code> for a game you own, or
+  <code>false</code> for one to add to your Wishlist instead. Wishlist games get the exact same treatment
+  as owned ones &mdash; full rules, expansions, categories &mdash; there's nothing extra to do later beyond
+  hitting "Mark as Owned" on that game's page once you actually get it.
 </p>
 <p class="hint">
   <code>rules_text</code> is optional: paste the full rulebook text for that game (wrap it in double quotes
