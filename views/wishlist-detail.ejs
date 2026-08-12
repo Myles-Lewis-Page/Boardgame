@@ -60,7 +60,7 @@
       <div class="rule-content">
         <% previewSections.forEach((s, i) => { %>
           <div class="rule-card" id="preview-section-<%= i %>">
-            <h3><%= s.title %></h3>
+            <h3><%= s.title %><% if (s.categoryPath) { %> <span class="badge badge-override"><%= s.categoryPath %></span><% } %></h3>
             <div class="rule-body-view"><%= s.body %></div>
           </div>
         <% }) %>

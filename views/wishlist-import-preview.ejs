@@ -44,6 +44,12 @@
           <% } %>
           <textarea name="rules_text" rows="6" placeholder="Optional: paste the rulebook text here, saved as-is until this entry is marked owned"><%= g.rules_text %></textarea>
         </label>
+
+        <label class="rules-text-label">
+          Rule categories (optional)
+          <textarea name="rule_categories" rows="3" placeholder="One per line: SECTION TITLE=Category Path"><%= g.rule_categories %></textarea>
+          <span class="hint">Applied automatically when this entry is marked owned.</span>
+        </label>
       </div>
     <% }) %>
 

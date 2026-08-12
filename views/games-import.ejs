@@ -20,7 +20,15 @@
 <p class="hint">
   <code>category_path</code> is optional: put a category path like <code>Strategy &gt; Deck Building &gt; Dice-Driven</code>
   (up to 4 levels, separated by <code>&gt;</code>) and any levels that don't exist yet are created automatically.
-  Leave it blank for no category. You'll get a preview to fix anything before it's saved.
+  Leave it blank for no category.
+</p>
+<p class="hint">
+  <code>rule_categories</code> is optional and organizes the rule sections themselves (Setup, Gameplay, etc.),
+  not the game as a whole. One line per section: <code>SECTION TITLE=Category Path</code>, matched
+  case-insensitively against the section titles detected in <code>rules_text</code>. For example:
+  <code>SETUP=Setup</code> and <code>DEVELOPMENT CARDS=Gameplay &gt; Development Cards</code> on their own
+  lines. Sections you don't list stay uncategorized, and you can still fix or add categories later from the
+  game's own page. You'll get a preview to fix anything before it's saved.
 </p>
 <p><a href="/games/import/template" class="btn btn-small btn-secondary">Download starter template.csv</a></p>
 

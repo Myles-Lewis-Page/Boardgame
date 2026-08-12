@@ -38,8 +38,29 @@ function parseCsvText(text) {
 
 const EXPECTED_HEADERS = [
   'name', 'publisher', 'genre', 'min_players', 'max_players',
-  'play_time_minutes', 'cover_image_url', 'notes', 'rules_text', 'expansion_of', 'category_path'
+  'play_time_minutes', 'cover_image_url', 'notes', 'rules_text', 'expansion_of', 'category_path', 'rule_categories'
 ];
+
+/**
+ * Parses a rule_categories cell into a Map of SECTION TITLE (uppercased) ->
+ * category path string. Format is one "Title=Path" pair per line, e.g.:
+ *   SETUP=Setup
+ *   DEVELOPMENT CARDS=Gameplay > Development Cards
+ * Titles are matched case-insensitively against the section titles produced
+ * by parseRulebook() on the same row's rules_text.
+ */
+function parseRuleCategoriesMapping(text) {
+  const map = new Map();
+  if (!text) return map;
+  text.split('\n').forEach(line => {
+    const idx = line.indexOf('=');
+    if (idx === -1) return;
+    const title = line.slice(0, idx).trim();
+    const path = line.slice(idx + 1).trim();
+    if (title && path) map.set(title.toUpperCase(), path);
+  });
+  return map;
+}
 
 /**
  * Parses raw CSV text into an array of game row objects plus per-row
@@ -90,6 +111,7 @@ function parseGamesCsv(rawText) {
       detected_section_count: raw.rules_text ? parseRulebook(raw.rules_text).length : 0,
       expansion_of: raw.expansion_of || '',
       category_path: raw.category_path || '',
+      rule_categories: raw.rule_categories || '',
       errors
     };
   });
@@ -97,7 +119,7 @@ function parseGamesCsv(rawText) {
   return { headers: headerRow, games, headerError: null };
 }
 
-const CSV_TEMPLATE = `name,publisher,genre,min_players,max_players,play_time_minutes,cover_image_url,notes,rules_text,expansion_of,category_path
+const CSV_TEMPLATE = `name,publisher,genre,min_players,max_players,play_time_minutes,cover_image_url,notes,rules_text,expansion_of,category_path,rule_categories
 Catan,Kosmos,Strategy,3,4,90,,Base game plus Seafarers expansion,"SETUP
 Place the board in the middle of the table. Give each player 2 wood and 2 brick.
 
@@ -105,10 +127,12 @@ BUILDING ROADS
 Roads cost 1 wood and 1 brick. You must connect to an existing road or settlement.
 
 TRADING
-You may trade with other players or the bank at a 4:1 ratio.",,Strategy > Settlement Building
-Catan: Seafarers,Kosmos,Strategy,3,4,90,,Adds ships and islands,,Catan,Strategy > Settlement Building
-Dominion,Rio Grande Games,Deck Building,2,4,45,,,,,Strategy > Deck Building
-Ticket to Ride,Days of Wonder,Family,2,5,60,,,,,Strategy > Route Building
+You may trade with other players or the bank at a 4:1 ratio.",,Strategy > Settlement Building,"SETUP=Setup
+BUILDING ROADS=Gameplay
+TRADING=Gameplay"
+Catan: Seafarers,Kosmos,Strategy,3,4,90,,Adds ships and islands,,Catan,Strategy > Settlement Building,
+Dominion,Rio Grande Games,Deck Building,2,4,45,,,,,Strategy > Deck Building,
+Ticket to Ride,Days of Wonder,Family,2,5,60,,,,,Strategy > Route Building,
 `;
 
-module.exports = { parseCsvText, parseGamesCsv, EXPECTED_HEADERS, CSV_TEMPLATE };
+module.exports = { parseCsvText, parseGamesCsv, EXPECTED_HEADERS, CSV_TEMPLATE, parseRuleCategoriesMapping };

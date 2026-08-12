@@ -81,8 +81,12 @@ CREATE TABLE IF NOT EXISTS wishlist_games (
   cover_image_url TEXT,
   notes TEXT,
   rules_text TEXT,
+  rule_categories TEXT,
   created_at TIMESTAMP DEFAULT now()
 );
+
+-- Upgrade path for wishlist entries created before rule_categories existed.
+ALTER TABLE wishlist_games ADD COLUMN IF NOT EXISTS rule_categories TEXT;
 
 -- Categories: a self-referencing tree, up to 4 levels deep (depth 1-4).
 -- This is separate from the free-text "genre" field - genre stays a quick

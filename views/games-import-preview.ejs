@@ -51,6 +51,15 @@
           <% } %>
           <textarea name="rules_text" rows="6" placeholder="Optional: paste the rulebook text here, it'll be split into sections automatically on save"><%= g.rules_text %></textarea>
         </label>
+
+        <label class="rules-text-label">
+          Rule categories (optional)
+          <textarea name="rule_categories" rows="3" placeholder="One per line: SECTION TITLE=Category Path
+e.g.
+SETUP=Setup
+DEVELOPMENT CARDS=Gameplay > Development Cards"><%= g.rule_categories %></textarea>
+          <span class="hint">Matches section titles above (case-insensitive) to a category path, up to 4 levels. Sections not listed here stay uncategorized.</span>
+        </label>
       </div>
     <% }) %>
 

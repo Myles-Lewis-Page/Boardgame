@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const { requireAuth } = require('../middleware/auth');
-const { parseGamesCsv, CSV_TEMPLATE } = require('../db/parseGamesCsv');
+const { parseGamesCsv, CSV_TEMPLATE, parseRuleCategoriesMapping } = require('../db/parseGamesCsv');
 const { parseRulebook } = require('../db/parseRulebook');
 const { findOrCreateCategoryPath } = require('../db/categoryTree');
+const { findOrCreateRuleCategoryPath } = require('../db/ruleCategoryTree');
 
 // Download a starter CSV template (requires login, same as the rest of import)
 router.get('/games/import/template', requireAuth, (req, res) => {
@@ -36,7 +37,7 @@ router.post('/games/import/preview', requireAuth, (req, res) => {
 router.post('/games/import/save', requireAuth, async (req, res) => {
   let {
     name, publisher, genre, min_players, max_players, play_time_minutes,
-    cover_image_url, notes, rules_text, expansion_of, category_path, include
+    cover_image_url, notes, rules_text, expansion_of, category_path, rule_categories, include
   } = req.body;
 
   const toArray = v => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
@@ -51,23 +52,38 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
   rules_text = toArray(rules_text);
   expansion_of = toArray(expansion_of);
   category_path = toArray(category_path);
+  rule_categories = toArray(rule_categories);
   const includeSet = new Set(toArray(include));
 
   const client = await pool.connect();
   let insertedGamesCount = 0;
   let insertedExpansionsCount = 0;
   let sectionsInsertedCount = 0;
+  let sectionsCategorizedCount = 0;
   let skippedExpansions = [];
 
-  async function insertRules(client, gameId, expansionId, rawRules) {
+  // Inserts a game/expansion's rule sections AND, in the same pass, assigns
+  // each one its rule sub-category based on the row's rule_categories
+  // mapping (Title=Path per line) - no separate recategorize step needed
+  // for anything added through this import.
+  async function insertRules(client, gameId, expansionId, rawRules, rawRuleCategories) {
     const trimmed = (rawRules || '').trim();
     if (!trimmed) return;
     const sections = parseRulebook(trimmed);
+    const catMap = parseRuleCategoriesMapping(rawRuleCategories);
     for (let s = 0; s < sections.length; s++) {
       if (!sections[s].title.trim()) continue;
+
+      let ruleCategoryId = null;
+      const path = catMap.get(sections[s].title.trim().toUpperCase());
+      if (path) {
+        ruleCategoryId = await findOrCreateRuleCategoryPath(client, gameId, expansionId, path.split('>'));
+        sectionsCategorizedCount++;
+      }
+
       await client.query(
-        `INSERT INTO base_rule_sections (game_id, expansion_id, title, body, sort_order) VALUES ($1, $2, $3, $4, $5)`,
-        [gameId, expansionId, sections[s].title.trim(), sections[s].body.trim(), s]
+        `INSERT INTO base_rule_sections (game_id, expansion_id, title, body, sort_order, rule_category_id) VALUES ($1, $2, $3, $4, $5, $6)`,
+        [gameId, expansionId, sections[s].title.trim(), sections[s].body.trim(), s, ruleCategoryId]
       );
       sectionsInsertedCount++;
     }
@@ -115,7 +131,7 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
       insertedGamesCount++;
       const newGameId = rows[0].id;
       gameIdByName.set(name[i].trim().toLowerCase(), newGameId);
-      await insertRules(client, newGameId, null, rules_text[i]);
+      await insertRules(client, newGameId, null, rules_text[i], rule_categories[i]);
     }
 
     // Pass 2: expansions - looked up against the map built above, which now
@@ -150,7 +166,7 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
       );
       insertedExpansionsCount++;
       const newExpansionId = rows[0].id;
-      await insertRules(client, parentId, newExpansionId, rules_text[i]);
+      await insertRules(client, parentId, newExpansionId, rules_text[i], rule_categories[i]);
     }
 
     await client.query('COMMIT');
@@ -165,6 +181,7 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
     insertedCount: insertedGamesCount,
     insertedExpansionsCount,
     sectionsInsertedCount,
+    sectionsCategorizedCount,
     skippedExpansions
   });
 });

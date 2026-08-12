@@ -4,7 +4,7 @@
 <p>
   <%= insertedCount %> game<%= insertedCount === 1 ? '' : 's' %> added.<% if (insertedExpansionsCount > 0) { %>
   <%= insertedExpansionsCount %> expansion<%= insertedExpansionsCount === 1 ? '' : 's' %> added.<% } %><% if (sectionsInsertedCount > 0) { %>
-  <%= sectionsInsertedCount %> rule section<%= sectionsInsertedCount === 1 ? '' : 's' %> created from the rulebook text.<% } %>
+  <%= sectionsInsertedCount %> rule section<%= sectionsInsertedCount === 1 ? '' : 's' %> created from the rulebook text<% if (sectionsCategorizedCount > 0) { %>, <%= sectionsCategorizedCount %> of them pre-categorized<% } %>.<% } %>
 </p>
 
 <% if (skippedExpansions && skippedExpansions.length > 0) { %>
