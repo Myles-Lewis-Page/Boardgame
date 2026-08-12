@@ -120,3 +120,29 @@ CREATE INDEX IF NOT EXISTS idx_rule_categories_parent ON rule_categories(parent_
 
 ALTER TABLE base_rule_sections ADD COLUMN IF NOT EXISTS rule_category_id INTEGER REFERENCES rule_categories(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_base_rule_sections_rule_category ON base_rule_sections(rule_category_id);
+
+-- Setup options: named alternate ways to set up a session of this game
+-- (e.g. Dominion's curated Kingdom card sets like "Beginner Game" or
+-- "Interactive Kingdom", or a Catan board layout variant). Deliberately
+-- separate from base_rule_sections - these aren't steps in the rulebook's
+-- narrative flow, they're a menu of setup choices you pick one of before
+-- playing, so they're browsed as their own list rather than nested into
+-- the Setup/Gameplay/Scoring table of contents.
+CREATE TABLE IF NOT EXISTS setup_options (
+  id SERIAL PRIMARY KEY,
+  game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+  expansion_id INTEGER REFERENCES expansions(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_setup_options_game ON setup_options(game_id);
+CREATE INDEX IF NOT EXISTS idx_setup_options_expansion ON setup_options(expansion_id);
+
+-- House rules can now be filed under a rule category (when added as an
+-- "extra" rule, not overriding anything), so they can actually show up on
+-- the Rules tab alongside the base sections instead of only living on the
+-- separate House Rules tab.
+ALTER TABLE house_rules ADD COLUMN IF NOT EXISTS rule_category_id INTEGER REFERENCES rule_categories(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_house_rules_rule_category ON house_rules(rule_category_id);

@@ -1,12 +1,22 @@
 <%
-  // locals expected: s (section row), isAdmin, gameId, categoryOptionsForSrc (flat list for the dropdown)
+  // locals expected: s (section row), isAdmin, gameId, sourceKey, overrideHouseRule (active
+  // house rule overriding this section, or undefined)
   const editAction = s.expansion_id === null ? `/base-rules/${s.id}/edit` : `/expansion-base-rules/${s.id}/edit`;
   const deleteAction = s.expansion_id === null ? `/base-rules/${s.id}/delete` : `/expansion-base-rules/${s.id}/delete`;
   const uncategorizeAction = s.expansion_id === null ? `/base-rules/${s.id}/uncategorize` : `/expansion-base-rules/${s.id}/uncategorize`;
+  const searchExtra = overrideHouseRule ? (overrideHouseRule.title + ' ' + overrideHouseRule.body) : '';
 %>
-<div class="rule-card searchable" data-source="<%= sourceKey %>" id="section-<%= s.id %>" data-search-text="<%= (s.title + ' ' + s.body).toLowerCase().replace(/"/g,'&quot;') %>">
-  <h3><%= s.title %></h3>
-  <div class="rule-body-view"><%= s.body %></div>
+<div class="rule-card searchable <%= overrideHouseRule ? 'has-override' : '' %>" data-source="<%= sourceKey %>" id="section-<%= s.id %>" data-search-text="<%= (s.title + ' ' + s.body + ' ' + searchExtra).toLowerCase().replace(/"/g,'&quot;') %>">
+  <h3><%= s.title %><% if (overrideHouseRule) { %> <span class="badge badge-override">house rule active</span><% } %></h3>
+  <% if (overrideHouseRule) { %>
+    <div class="rule-body-view house-rule-override-body"><%= overrideHouseRule.body %></div>
+    <details class="original-rule-details">
+      <summary>Original rule (overridden)</summary>
+      <div class="rule-body-view rule-body-struck"><%= s.body %></div>
+    </details>
+  <% } else { %>
+    <div class="rule-body-view"><%= s.body %></div>
+  <% } %>
   <% if (isAdmin) { %>
   <button class="btn btn-tiny" onclick="this.parentElement.querySelector('.edit-form').classList.toggle('hidden')">Edit</button>
   <form class="edit-form hidden" method="POST" action="<%= editAction %>">

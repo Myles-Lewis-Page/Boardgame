@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { asyncHandler } = require('../middleware/asyncHandler');
 const { parseGamesCsv, CSV_TEMPLATE, parseRuleCategoriesMapping } = require('../db/parseGamesCsv');
 const { parseRulebook } = require('../db/parseRulebook');
 const { findOrCreateCategoryPath } = require('../db/categoryTree');
@@ -34,10 +35,10 @@ router.post('/games/import/preview', requireAuth, (req, res) => {
 // Standalone games are always inserted first, in a first pass, so a parent
 // created earlier in the same batch is available by the time its expansion
 // rows are processed, regardless of what order they appeared in the file.
-router.post('/games/import/save', requireAuth, async (req, res) => {
+router.post('/games/import/save', requireAuth, asyncHandler(async (req, res) => {
   let {
     name, publisher, genre, min_players, max_players, play_time_minutes,
-    cover_image_url, notes, rules_text, expansion_of, category_path, rule_categories, owned, variant_of, include
+    cover_image_url, notes, rules_text, expansion_of, category_path, rule_categories, owned, variant_of, setup_options, include
   } = req.body;
 
   const toArray = v => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
@@ -55,6 +56,7 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
   rule_categories = toArray(rule_categories);
   owned = toArray(owned);
   variant_of = toArray(variant_of);
+  setup_options = toArray(setup_options);
   const includeSet = new Set(toArray(include));
 
   const client = await pool.connect();
@@ -62,6 +64,7 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
   let insertedExpansionsCount = 0;
   let sectionsInsertedCount = 0;
   let sectionsCategorizedCount = 0;
+  let setupOptionsInsertedCount = 0;
   let skippedExpansions = [];
   let skippedVariants = [];
 
@@ -89,6 +92,23 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
         [gameId, expansionId, sections[s].title.trim(), sections[s].body.trim(), s, ruleCategoryId]
       );
       sectionsInsertedCount++;
+    }
+  }
+
+  // Setup options use the same heading-detection heuristic as rules_text,
+  // but land in their own table since they're a menu of alternate setups
+  // rather than steps in the rulebook's sequential flow.
+  async function insertSetupOptions(client, gameId, expansionId, rawSetupOptions) {
+    const trimmed = (rawSetupOptions || '').trim();
+    if (!trimmed) return;
+    const options = parseRulebook(trimmed);
+    for (let s = 0; s < options.length; s++) {
+      if (!options[s].title.trim()) continue;
+      await client.query(
+        `INSERT INTO setup_options (game_id, expansion_id, title, body, sort_order) VALUES ($1, $2, $3, $4, $5)`,
+        [gameId, expansionId, options[s].title.trim(), options[s].body.trim(), s]
+      );
+      setupOptionsInsertedCount++;
     }
   }
 
@@ -136,6 +156,7 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
       const newGameId = rows[0].id;
       gameIdByName.set(name[i].trim().toLowerCase(), newGameId);
       await insertRules(client, newGameId, null, rules_text[i], rule_categories[i]);
+      await insertSetupOptions(client, newGameId, null, setup_options[i]);
     }
 
     // Pass 1b: variant_of links between standalone games - a second pass
@@ -189,6 +210,7 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
       insertedExpansionsCount++;
       const newExpansionId = rows[0].id;
       await insertRules(client, parentId, newExpansionId, rules_text[i], rule_categories[i]);
+      await insertSetupOptions(client, parentId, newExpansionId, setup_options[i]);
     }
 
     await client.query('COMMIT');
@@ -204,9 +226,10 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
     insertedExpansionsCount,
     sectionsInsertedCount,
     sectionsCategorizedCount,
+    setupOptionsInsertedCount,
     skippedExpansions,
     skippedVariants
   });
-});
+}));
 
 module.exports = router;

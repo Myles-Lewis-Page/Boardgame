@@ -151,4 +151,21 @@ document.addEventListener('DOMContentLoaded', () => {
     houseAddTarget.addEventListener('change', updateHouseAddTarget);
     updateHouseAddTarget();
   }
+
+  // ---- "Add setup option for: [source]" picker ----
+  const setupAddTarget = document.getElementById('setup-add-target');
+  const addSetupOptionForm = document.getElementById('add-setup-option-form-el');
+
+  function updateSetupAddTarget() {
+    if (!setupAddTarget || !addSetupOptionForm || !gameId) return;
+    const opt = setupAddTarget.options[setupAddTarget.selectedIndex];
+    const expId = opt.dataset.expansionId;
+    addSetupOptionForm.action = expId
+      ? `/games/${gameId}/expansions/${expId}/setup-options`
+      : `/games/${gameId}/setup-options`;
+  }
+  if (setupAddTarget) {
+    setupAddTarget.addEventListener('change', updateSetupAddTarget);
+    updateSetupAddTarget();
+  }
 });

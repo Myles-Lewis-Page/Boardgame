@@ -4,7 +4,7 @@ const pool = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/asyncHandler');
 const { buildCategoryTree, flattenForSelect, annotatePathLabels, pathForCategoryId } = require('../db/categoryTree');
-const { buildTree: buildRuleCategoryTree, pathForRuleCategoryId } = require('../db/ruleCategoryTree');
+const { buildTree: buildRuleCategoryTree, pathForRuleCategoryId, setupFirstWinningLastCompare } = require('../db/ruleCategoryTree');
 
 async function getCategorySelectOptions() {
   const { rows } = await pool.query('SELECT * FROM categories ORDER BY depth ASC, name ASC');
@@ -113,6 +113,14 @@ router.get('/:id', asyncHandler(async (req, res) => {
     [id]
   );
 
+  // Setup options: alternate ways to set up a session (e.g. Dominion's
+  // curated Kingdom sets). Shown above the search bar on the Rules tab,
+  // separate from the sequential rulebook flow.
+  const { rows: allSetupOptions } = await pool.query(
+    'SELECT * FROM setup_options WHERE game_id = $1 ORDER BY expansion_id NULLS FIRST, sort_order ASC, id ASC',
+    [id]
+  );
+
   // "sources" is the ordered list of things rules can belong to: the base
   // game first, then each owned expansion. Used to build filter chips, the
   // grouped table of contents, and the "add rules for..." picker.
@@ -143,9 +151,9 @@ router.get('/:id', asyncHandler(async (req, res) => {
 
   res.render('game-detail', {
     game, expansions, sources,
-    allSections, allHouseRules,
+    allSections, allHouseRules, allSetupOptions,
     baseSections, baseHouseRules,
-    allRuleCategories, buildRuleCategoryTree, pathForRuleCategoryId,
+    allRuleCategories, buildRuleCategoryTree, pathForRuleCategoryId, setupFirstWinningLastCompare,
     categoryOptions, categoryPath,
     variantOptions, variantOf, variations
   });

@@ -1,14 +1,19 @@
 <%
   // locals expected: node (category with .children), sectionsByCategory (Map id -> sections array),
+  // houseRulesByCategory (Map id -> active "extra" house rules array), overridesBySection (Map section id -> house rule),
   // isAdmin, gameId, sourceKey
   const secsHere = sectionsByCategory.get(node.id) || [];
+  const extraHouseRulesHere = houseRulesByCategory.get(node.id) || [];
 %>
 <div class="rule-category-block" data-source="<%= sourceKey %>" style="margin-left: <%= (node.depth - 1) * 16 %>px" id="rulecat-<%= node.id %>">
   <h4 class="rule-category-header"><%= node.name %></h4>
   <% secsHere.forEach(s => { %>
-    <%- include('rule-section-card', { s, isAdmin, gameId, sourceKey }) %>
+    <%- include('rule-section-card', { s, isAdmin, gameId, sourceKey, overrideHouseRule: overridesBySection.get(s.id) }) %>
+  <% }) %>
+  <% extraHouseRulesHere.forEach(h => { %>
+    <%- include('house-rule-extra-card', { h, isAdmin, gameId, sourceKey }) %>
   <% }) %>
   <% node.children.forEach(child => { %>
-    <%- include('rule-category-node', { node: child, sectionsByCategory, isAdmin, gameId, sourceKey }) %>
+    <%- include('rule-category-node', { node: child, sectionsByCategory, houseRulesByCategory, overridesBySection, isAdmin, gameId, sourceKey }) %>
   <% }) %>
 </div>

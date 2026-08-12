@@ -38,7 +38,7 @@ function parseCsvText(text) {
 
 const EXPECTED_HEADERS = [
   'name', 'publisher', 'genre', 'min_players', 'max_players',
-  'play_time_minutes', 'cover_image_url', 'notes', 'rules_text', 'expansion_of', 'category_path', 'rule_categories', 'owned', 'variant_of'
+  'play_time_minutes', 'cover_image_url', 'notes', 'rules_text', 'expansion_of', 'category_path', 'rule_categories', 'owned', 'variant_of', 'setup_options'
 ];
 
 /**
@@ -116,6 +116,7 @@ function parseGamesCsv(rawText) {
       // value opts a row into the wishlist instead.
       owned: !['false', 'no', '0', 'wishlist'].includes((raw.owned || '').trim().toLowerCase()),
       variant_of: raw.variant_of || '',
+      setup_options: raw.setup_options || '',
       errors
     };
   });
@@ -123,7 +124,7 @@ function parseGamesCsv(rawText) {
   return { headers: headerRow, games, headerError: null };
 }
 
-const CSV_TEMPLATE = `name,publisher,genre,min_players,max_players,play_time_minutes,cover_image_url,notes,rules_text,expansion_of,category_path,rule_categories,owned
+const CSV_TEMPLATE = `name,publisher,genre,min_players,max_players,play_time_minutes,cover_image_url,notes,rules_text,expansion_of,category_path,rule_categories,owned,variant_of,setup_options
 Catan,Kosmos,Strategy,3,4,90,,Base game plus Seafarers expansion,"SETUP
 Place the board in the middle of the table. Give each player 2 wood and 2 brick.
 
@@ -133,10 +134,14 @@ Roads cost 1 wood and 1 brick. You must connect to an existing road or settlemen
 TRADING
 You may trade with other players or the bank at a 4:1 ratio.",,Strategy > Settlement Building,"SETUP=Setup
 BUILDING ROADS=Gameplay
-TRADING=Gameplay",true
-Catan: Seafarers,Kosmos,Strategy,3,4,90,,Adds ships and islands,,Catan,Strategy > Settlement Building,,true
-Dominion,Rio Grande Games,Deck Building,2,4,45,,,,,Strategy > Deck Building,,true
-Root,Leder Games,Strategy,2,4,90,,Don't own it yet,,,Strategy > Area Control & War,,false
+TRADING=Gameplay",true,,
+Catan: Seafarers,Kosmos,Strategy,3,4,90,,Adds ships and islands,,Catan,Strategy > Settlement Building,,true,,
+Dominion,Rio Grande Games,Deck Building,2,4,45,,,,,Strategy > Deck Building,,true,,"BEGINNER GAME
+A gentle first game: Cellar, Market, Merchant, Militia, Mine, Moat, Remodel, Smithy, Village, Woodcutter.
+
+INTERACTIVE KINGDOM
+A set focused on player interaction: Bureaucrat, Chancellor, Council Room, Festival, Library, Militia, Moat, Spy, Thief, Village."
+Root,Leder Games,Strategy,2,4,90,,Don't own it yet,,,Strategy > Area Control & War,,false,,
 `;
 
 module.exports = { parseCsvText, parseGamesCsv, EXPECTED_HEADERS, CSV_TEMPLATE, parseRuleCategoriesMapping };

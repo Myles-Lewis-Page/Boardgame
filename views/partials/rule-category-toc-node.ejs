@@ -1,11 +1,15 @@
 <%
-  // locals expected: node, sectionsByCategory, sourceKey
+  // locals expected: node, sectionsByCategory, houseRulesByCategory, sourceKey
   const secsHere = sectionsByCategory.get(node.id) || [];
+  const extraHouseRulesHere = houseRulesByCategory.get(node.id) || [];
 %>
 <div class="toc-subheader toc-cat-header" data-source="<%= sourceKey %>" data-cat-id="<%= node.id %>" style="padding-left: <%= 8 + (node.depth - 1) * 12 %>px"><%= node.name %></div>
 <% secsHere.forEach(s => { %>
   <a href="#section-<%= s.id %>" class="toc-link" data-source="<%= sourceKey %>" data-scroll style="padding-left: <%= 8 + node.depth * 12 %>px"><%= s.title %></a>
 <% }) %>
+<% extraHouseRulesHere.forEach(h => { %>
+  <a href="#houserule-<%= h.id %>" class="toc-link toc-house-extra" data-source="<%= sourceKey %>" data-scroll style="padding-left: <%= 8 + node.depth * 12 %>px">🏠 <%= h.title %></a>
+<% }) %>
 <% node.children.forEach(child => { %>
-  <%- include('rule-category-toc-node', { node: child, sectionsByCategory, sourceKey }) %>
+  <%- include('rule-category-toc-node', { node: child, sectionsByCategory, houseRulesByCategory, sourceKey }) %>
 <% }) %>

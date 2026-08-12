@@ -145,7 +145,67 @@
   </div>
   <% } %>
 
-  <% if (allSections.length === 0) { %>
+  <% const anyActiveExtraHouseRules = allHouseRules.some(h => h.is_active && !h.base_section_id); %>
+
+  <% if (isAdmin || allSetupOptions.length > 0) { %>
+  <div class="setup-options-block">
+    <h2 class="setup-options-heading">Setup Options</h2>
+    <% if (isAdmin) { %>
+    <div class="panel-actions">
+      <label class="add-target-label">Add setup option for:
+        <select id="setup-add-target">
+          <% sources.forEach(src => { %>
+            <option value="<%= src.key %>" data-expansion-id="<%= src.expansionId || '' %>"><%= src.label %><%= src.isBase ? ' (base game)' : '' %></option>
+          <% }) %>
+        </select>
+      </label>
+      <button class="btn btn-secondary" onclick="document.getElementById('add-setup-option-form').classList.toggle('hidden')">+ Add Setup Option</button>
+    </div>
+    <div id="add-setup-option-form" class="form-card hidden">
+      <form id="add-setup-option-form-el" method="POST" action="/games/<%= game.id %>/setup-options">
+        <label>Title (e.g. "Beginner Game")<input type="text" name="title" required></label>
+        <label>Instructions<textarea name="body" rows="4" required></textarea></label>
+        <button type="submit" class="btn">Add Setup Option</button>
+      </form>
+    </div>
+    <% } %>
+    <% if (allSetupOptions.length === 0) { %>
+      <p class="empty">No alternate setups added yet.<% if (isAdmin) { %> Use this for games that can be set up multiple ways, like a curated Kingdom set for Dominion or a board layout variant for Catan.<% } %></p>
+    <% } else { %>
+      <% sources.forEach(src => {
+        const optsForSrc = allSetupOptions.filter(o => (src.isBase ? o.expansion_id === null : o.expansion_id === src.expansionId));
+        if (optsForSrc.length === 0) return;
+      %>
+        <% if (expansions.length > 0) { %><h3 class="source-group-header" data-source="<%= src.key %>"><%= src.label %></h3><% } %>
+        <% optsForSrc.forEach(o => {
+          const isExp = o.expansion_id !== null;
+          const editAction = isExp ? `/expansion-setup-options/${o.id}/edit` : `/setup-options/${o.id}/edit`;
+          const deleteAction = isExp ? `/expansion-setup-options/${o.id}/delete` : `/setup-options/${o.id}/delete`;
+        %>
+        <details class="rule-card setup-option-card" data-source="<%= src.key %>">
+          <summary><%= o.title %></summary>
+          <div class="rule-body-view"><%= o.body %></div>
+          <% if (isAdmin) { %>
+          <button class="btn btn-tiny" onclick="event.preventDefault(); this.closest('.rule-card').querySelector('.edit-form').classList.toggle('hidden')">Edit</button>
+          <form method="POST" action="<%= deleteAction %>" onsubmit="return confirm('Delete this setup option?')" class="inline-form">
+            <input type="hidden" name="gameId" value="<%= game.id %>">
+            <button type="submit" class="btn btn-tiny btn-danger">Delete</button>
+          </form>
+          <form class="edit-form hidden" method="POST" action="<%= editAction %>">
+            <input type="hidden" name="gameId" value="<%= game.id %>">
+            <label>Title<input type="text" name="title" value="<%= o.title %>"></label>
+            <label>Instructions<textarea name="body" rows="4"><%= o.body %></textarea></label>
+            <button type="submit" class="btn btn-tiny">Save</button>
+          </form>
+          <% } %>
+        </details>
+        <% }) %>
+      <% }) %>
+    <% } %>
+  </div>
+  <% } %>
+
+  <% if (allSections.length === 0 && !anyActiveExtraHouseRules) { %>
     <p class="empty">No rules added yet. <% if (isAdmin) { %>Paste the rulebook text above to get started.<% } %></p>
   <% } else { %>
 
@@ -156,7 +216,9 @@
       <div class="toc-label">Sections</div>
       <% sources.forEach(src => {
         const sectionsForSrc = allSections.filter(s => (src.isBase ? s.expansion_id === null : s.expansion_id === src.expansionId));
-        if (sectionsForSrc.length === 0) return;
+        const activeHouseRulesForSrc = allHouseRules.filter(h => h.is_active && (src.isBase ? h.expansion_id === null : h.expansion_id === src.expansionId));
+        const extraHouseRules = activeHouseRulesForSrc.filter(h => !h.base_section_id);
+        if (sectionsForSrc.length === 0 && extraHouseRules.length === 0) return;
 
         const catRowsForSrc = allRuleCategories.filter(c => (src.isBase ? c.expansion_id === null : c.expansion_id === src.expansionId));
         const catTree = buildRuleCategoryTree(catRowsForSrc);
@@ -166,14 +228,27 @@
           if (!sectionsByCategory.has(s.rule_category_id)) sectionsByCategory.set(s.rule_category_id, []);
           sectionsByCategory.get(s.rule_category_id).push(s);
         });
-        const uncategorized = sectionsForSrc.filter(s => !s.rule_category_id);
+        const houseRulesByCategory = new Map();
+        extraHouseRules.forEach(h => {
+          if (!h.rule_category_id) return;
+          if (!houseRulesByCategory.has(h.rule_category_id)) houseRulesByCategory.set(h.rule_category_id, []);
+          houseRulesByCategory.get(h.rule_category_id).push(h);
+        });
+        const uncategorizedItems = [
+          ...sectionsForSrc.filter(s => !s.rule_category_id).map(s => ({ type: 'section', title: s.title, s })),
+          ...extraHouseRules.filter(h => !h.rule_category_id).map(h => ({ type: 'houserule', title: h.title, h })),
+        ].sort((a, b) => setupFirstWinningLastCompare(a.title, b.title));
       %>
         <% if (expansions.length > 0) { %><div class="toc-subheader" data-source="<%= src.key %>"><%= src.label %></div><% } %>
-        <% uncategorized.forEach(s => { %>
-          <a href="#section-<%= s.id %>" class="toc-link" data-source="<%= src.key %>" data-scroll><%= s.title %></a>
+        <% uncategorizedItems.forEach(item => { %>
+          <% if (item.type === 'section') { %>
+            <a href="#section-<%= item.s.id %>" class="toc-link" data-source="<%= src.key %>" data-scroll><%= item.title %></a>
+          <% } else { %>
+            <a href="#houserule-<%= item.h.id %>" class="toc-link toc-house-extra" data-source="<%= src.key %>" data-scroll>🏠 <%= item.title %></a>
+          <% } %>
         <% }) %>
         <% catTree.forEach(node => { %>
-          <%- include('partials/rule-category-toc-node', { node, sectionsByCategory, sourceKey: src.key }) %>
+          <%- include('partials/rule-category-toc-node', { node, sectionsByCategory, houseRulesByCategory, sourceKey: src.key }) %>
         <% }) %>
       <% }) %>
       <% if (allHouseRules.length > 0) { %>
@@ -184,7 +259,12 @@
     <div class="rule-content">
       <% sources.forEach(src => {
         const sectionsForSrc = allSections.filter(s => (src.isBase ? s.expansion_id === null : s.expansion_id === src.expansionId));
-        if (sectionsForSrc.length === 0) return;
+        const activeHouseRulesForSrc = allHouseRules.filter(h => h.is_active && (src.isBase ? h.expansion_id === null : h.expansion_id === src.expansionId));
+        const extraHouseRules = activeHouseRulesForSrc.filter(h => !h.base_section_id);
+        const overridesBySection = new Map(
+          activeHouseRulesForSrc.filter(h => h.base_section_id).map(h => [h.base_section_id, h])
+        );
+        if (sectionsForSrc.length === 0 && extraHouseRules.length === 0) return;
 
         const catRowsForSrc = allRuleCategories.filter(c => (src.isBase ? c.expansion_id === null : c.expansion_id === src.expansionId));
         const catTree = buildRuleCategoryTree(catRowsForSrc);
@@ -194,7 +274,16 @@
           if (!sectionsByCategory.has(s.rule_category_id)) sectionsByCategory.set(s.rule_category_id, []);
           sectionsByCategory.get(s.rule_category_id).push(s);
         });
-        const uncategorized = sectionsForSrc.filter(s => !s.rule_category_id);
+        const houseRulesByCategory = new Map();
+        extraHouseRules.forEach(h => {
+          if (!h.rule_category_id) return;
+          if (!houseRulesByCategory.has(h.rule_category_id)) houseRulesByCategory.set(h.rule_category_id, []);
+          houseRulesByCategory.get(h.rule_category_id).push(h);
+        });
+        const uncategorizedItems = [
+          ...sectionsForSrc.filter(s => !s.rule_category_id).map(s => ({ type: 'section', title: s.title, s })),
+          ...extraHouseRules.filter(h => !h.rule_category_id).map(h => ({ type: 'houserule', title: h.title, h })),
+        ].sort((a, b) => setupFirstWinningLastCompare(a.title, b.title));
       %>
         <% if (expansions.length > 0) { %><h2 class="source-group-header" data-source="<%= src.key %>"><%= src.label %></h2><% } %>
         <% if (isAdmin && catRowsForSrc.length > 0) { %>
@@ -204,11 +293,15 @@
             <% }) %>
           </datalist>
         <% } %>
-        <% uncategorized.forEach(s => { %>
-          <%- include('partials/rule-section-card', { s, isAdmin, gameId: game.id, sourceKey: src.key }) %>
+        <% uncategorizedItems.forEach(item => { %>
+          <% if (item.type === 'section') { %>
+            <%- include('partials/rule-section-card', { s: item.s, isAdmin, gameId: game.id, sourceKey: src.key, overrideHouseRule: overridesBySection.get(item.s.id) }) %>
+          <% } else { %>
+            <%- include('partials/house-rule-extra-card', { h: item.h, isAdmin, gameId: game.id, sourceKey: src.key }) %>
+          <% } %>
         <% }) %>
         <% catTree.forEach(node => { %>
-          <%- include('partials/rule-category-node', { node, sectionsByCategory, isAdmin, gameId: game.id, sourceKey: src.key }) %>
+          <%- include('partials/rule-category-node', { node, sectionsByCategory, houseRulesByCategory, overridesBySection, isAdmin, gameId: game.id, sourceKey: src.key }) %>
         <% }) %>
       <% }) %>
     </div>
@@ -236,9 +329,19 @@
       </label>
       <label>Title<input type="text" name="title" required></label>
       <label>Rule Text<textarea name="body" rows="4" required></textarea></label>
-      <label>Overrides a rule section (optional)
+      <label>Type:
+        <select name="mode" class="house-rule-mode-select" onchange="this.closest('form').querySelector('.mode-extra').classList.toggle('hidden', this.value !== 'extra'); this.closest('form').querySelector('.mode-override').classList.toggle('hidden', this.value !== 'override');">
+          <option value="extra">Add as extra rule (its own entry on the Rules tab)</option>
+          <option value="override">Override an existing rule section</option>
+        </select>
+      </label>
+      <label class="mode-extra">Category (optional, up to 4 levels)
+        <input type="text" name="rule_category_path" placeholder="e.g. Gameplay > Development Cards">
+        <span class="hint">Where this shows up on the Rules tab. Leave blank to show it uncategorized.</span>
+      </label>
+      <label class="mode-override hidden">Overrides a rule section
         <select name="base_section_id">
-          <option value="">-- Standalone house rule --</option>
+          <option value="">-- Select a section --</option>
           <% sources.forEach(src => {
             const sectionsForSrc = allSections.filter(s => (src.isBase ? s.expansion_id === null : s.expansion_id === src.expansionId));
           %>
@@ -269,8 +372,12 @@
           <% if (!h.is_active) { %><span class="badge">off</span><% } %>
           <% if (h.base_section_id) {
             const base = allSections.find(b => b.id === h.base_section_id);
-            if (base) { %><span class="badge badge-override">overrides: <%= base.title %></span><% }
-          } %>
+            if (base) { %>
+              <span class="badge badge-override">overrides: <%= base.title %><%= h.is_active ? '' : ' (inactive, not applied)' %></span>
+            <% }
+          } else { %>
+            <span class="badge badge-house-rule">extra rule<%= h.rule_category_id ? ': ' + pathForRuleCategoryId(h.rule_category_id, allRuleCategories) : '' %><%= h.is_active ? '' : ' (inactive, not shown)' %></span>
+          <% } %>
         </summary>
         <div class="rule-body-view"><%= h.body %></div>
         <% if (isAdmin) {
@@ -278,6 +385,7 @@
           const toggleAction = isExp ? `/expansion-house-rules/${h.id}/toggle` : `/house-rules/${h.id}/toggle`;
           const deleteAction = isExp ? `/expansion-house-rules/${h.id}/delete` : `/house-rules/${h.id}/delete`;
           const editAction = isExp ? `/expansion-house-rules/${h.id}/edit` : `/house-rules/${h.id}/edit`;
+          const currentMode = h.base_section_id ? 'override' : 'extra';
         %>
         <div class="rule-card-actions">
           <button class="btn btn-tiny" onclick="event.preventDefault(); this.closest('.rule-card').querySelector('.edit-form').classList.toggle('hidden')">Edit</button>
@@ -294,9 +402,18 @@
           <input type="hidden" name="gameId" value="<%= game.id %>">
           <label>Title<input type="text" name="title" value="<%= h.title %>"></label>
           <label>Body<textarea name="body" rows="6"><%= h.body %></textarea></label>
-          <label>Overrides a rule section
+          <label>Type:
+            <select name="mode" onchange="this.closest('form').querySelector('.mode-extra').classList.toggle('hidden', this.value !== 'extra'); this.closest('form').querySelector('.mode-override').classList.toggle('hidden', this.value !== 'override');">
+              <option value="extra" <%= currentMode === 'extra' ? 'selected' : '' %>>Extra rule (its own entry on the Rules tab)</option>
+              <option value="override" <%= currentMode === 'override' ? 'selected' : '' %>>Override an existing rule section</option>
+            </select>
+          </label>
+          <label class="mode-extra <%= currentMode !== 'extra' ? 'hidden' : '' %>">Category (leave blank to keep current)
+            <input type="text" name="rule_category_path" placeholder="e.g. Gameplay > Development Cards">
+          </label>
+          <label class="mode-override <%= currentMode !== 'override' ? 'hidden' : '' %>">Overrides a rule section
             <select name="base_section_id">
-              <option value="">-- Standalone house rule --</option>
+              <option value="">-- Select a section --</option>
               <% sources.forEach(s2 => {
                 const secs = allSections.filter(s => (s2.isBase ? s.expansion_id === null : s.expansion_id === s2.expansionId));
               %>

@@ -1,6 +1,27 @@
 const MAX_DEPTH = 4;
 
 /**
+ * Orders by name, except: anything that looks like "Setup" always sorts
+ * first, and anything that looks like scoring/winning always sorts last.
+ * Used for both rule categories and loose (uncategorized) section titles,
+ * so a game's Rules tab reads Setup -> everything else -> Scoring/Winning
+ * by default, regardless of what order the rulebook text happened to list
+ * things in.
+ */
+function setupFirstWinningLastCompare(nameA, nameB) {
+  const rank = name => {
+    const n = name.toLowerCase();
+    if (n.includes('setup')) return 0;
+    if (n.includes('winning') || n.includes('scoring') || n.includes('end of game') || n.includes('ending')) return 2;
+    return 1;
+  };
+  const rankA = rank(nameA);
+  const rankB = rank(nameB);
+  if (rankA !== rankB) return rankA - rankB;
+  return nameA.localeCompare(nameB);
+}
+
+/**
  * Builds a nested tree from a flat list of rule_categories rows that all
  * belong to the same game/expansion scope (caller is responsible for
  * pre-filtering to that scope).
@@ -16,7 +37,7 @@ function buildTree(rows) {
     }
   });
   const sortTree = nodes => {
-    nodes.sort((a, b) => a.name.localeCompare(b.name));
+    nodes.sort((a, b) => setupFirstWinningLastCompare(a.name, b.name));
     nodes.forEach(n => sortTree(n.children));
   };
   sortTree(roots);
@@ -88,4 +109,4 @@ function pathForRuleCategoryId(categoryId, allRows) {
   return parts.join(' > ');
 }
 
-module.exports = { MAX_DEPTH, buildTree, flattenForSelect, findOrCreateRuleCategoryPath, pathForRuleCategoryId };
+module.exports = { MAX_DEPTH, buildTree, flattenForSelect, findOrCreateRuleCategoryPath, pathForRuleCategoryId, setupFirstWinningLastCompare };

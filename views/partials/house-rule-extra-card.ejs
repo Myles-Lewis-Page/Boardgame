@@ -1,0 +1,32 @@
+<%
+  // locals expected: h (house rule row), isAdmin, gameId, sourceKey
+  const isExp = h.expansion_id !== null;
+  const editAction = isExp ? `/expansion-house-rules/${h.id}/edit` : `/house-rules/${h.id}/edit`;
+  const toggleAction = isExp ? `/expansion-house-rules/${h.id}/toggle` : `/house-rules/${h.id}/toggle`;
+  const deleteAction = isExp ? `/expansion-house-rules/${h.id}/delete` : `/house-rules/${h.id}/delete`;
+%>
+<div class="rule-card searchable house-rule-extra-card" data-source="<%= sourceKey %>" id="houserule-<%= h.id %>" data-search-text="<%= (h.title + ' ' + h.body).toLowerCase().replace(/"/g,'&quot;') %>">
+  <h3><%= h.title %> <span class="badge badge-house-rule">house rule</span></h3>
+  <div class="rule-body-view"><%= h.body %></div>
+  <% if (isAdmin) { %>
+  <button class="btn btn-tiny" onclick="this.parentElement.querySelector('.edit-form').classList.toggle('hidden')">Edit</button>
+  <form method="POST" action="<%= toggleAction %>" class="inline-form">
+    <input type="hidden" name="gameId" value="<%= gameId %>">
+    <button type="submit" class="btn btn-tiny">Turn Off</button>
+  </form>
+  <form method="POST" action="<%= deleteAction %>" onsubmit="return confirm('Delete this house rule?')" class="inline-form">
+    <input type="hidden" name="gameId" value="<%= gameId %>">
+    <button type="submit" class="btn btn-tiny btn-danger">Delete</button>
+  </form>
+  <form class="edit-form hidden" method="POST" action="<%= editAction %>">
+    <input type="hidden" name="gameId" value="<%= gameId %>">
+    <input type="hidden" name="mode" value="extra">
+    <label>Title<input type="text" name="title" value="<%= h.title %>"></label>
+    <label>Body<textarea name="body" rows="6"><%= h.body %></textarea></label>
+    <label>Rule category path (leave blank to keep current)
+      <input type="text" name="rule_category_path" placeholder="e.g. Gameplay > Development Cards">
+    </label>
+    <button type="submit" class="btn btn-tiny">Save</button>
+  </form>
+  <% } %>
+</div>

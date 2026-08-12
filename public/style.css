@@ -468,6 +468,28 @@ textarea { resize: vertical; }
   margin-left: 8px;
 }
 .badge-override { background: #3d3320; color: var(--accent); }
+.badge-house-rule { background: rgba(217, 123, 63, 0.18); color: var(--accent); }
+
+/* House rule overrides shown inline on a base rule section */
+.rule-card.has-override { border-color: var(--accent); }
+.house-rule-override-body { border-left: 3px solid var(--accent); padding-left: 10px; }
+.original-rule-details { margin-top: 10px; }
+.original-rule-details summary { cursor: pointer; font-size: 0.82rem; color: var(--text-dim); }
+.rule-body-struck { opacity: 0.55; text-decoration: line-through; }
+
+/* Extra house rule cards shown directly on the Rules tab */
+.house-rule-extra-card { border-left: 3px solid var(--accent); }
+.toc-house-extra { color: var(--accent); }
+
+/* Setup options block */
+.setup-options-block {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin: 16px 0 20px;
+}
+.setup-options-heading { margin: 0 0 10px; font-size: 1.1rem; }
+.setup-option-card { border-left: 3px solid var(--accent); }
 
 .section-edit {
   border: 1px solid var(--border);
