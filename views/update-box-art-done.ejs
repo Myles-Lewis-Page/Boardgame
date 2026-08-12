@@ -1,0 +1,11 @@
+<%- include('partials/head', { title: 'Box Art Updated' }) %>
+
+<h1>Box Art Updated</h1>
+<p><%= updatedCount %> item<%= updatedCount === 1 ? '' : 's' %> updated.</p>
+
+<p>
+  <a href="/games" class="btn">Back to Games</a>
+  <a href="/games/update-box-art" class="btn btn-secondary">Update More</a>
+</p>
+
+<%- include('partials/foot') %>

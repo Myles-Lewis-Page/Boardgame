@@ -1,0 +1,33 @@
+<%- include('partials/head', { title: 'Update Box Art' }) %>
+
+<p><a href="/games">&larr; Games</a></p>
+<h1>Update Box Art</h1>
+<p class="hint">
+  Bulk-set box art for games and expansions you already have. Two columns: <code>game_name, cover_image_url</code>.
+  Each name is matched exactly (case-insensitive) against your games and expansions.
+</p>
+<p><a href="/games/update-box-art/template" class="btn btn-small btn-secondary">Download starter template.csv</a></p>
+
+<form method="POST" action="/games/update-box-art/preview" class="form-card" id="box-art-form">
+  <label>Upload a CSV file
+    <input type="file" id="csv-file-input" accept=".csv,text/csv">
+  </label>
+  <label>...or paste CSV text here
+    <textarea name="rawCsv" id="raw-csv" rows="14" placeholder="game_name,cover_image_url
+Catan,https://...
+Ticket to Ride,https://..."></textarea>
+  </label>
+  <button type="submit" class="btn">Preview</button>
+</form>
+
+<script>
+  document.getElementById('csv-file-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => { document.getElementById('raw-csv').value = reader.result; };
+    reader.readAsText(file);
+  });
+</script>
+
+<%- include('partials/foot') %>
