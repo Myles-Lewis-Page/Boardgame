@@ -31,6 +31,15 @@
       <option value="<%= n %>">Fits <%= n %> player<%= n > 1 ? 's' : '' %></option>
     <% } %>
   </select>
+
+  <% if (categoryOptions.length > 0) { %>
+  <select id="category-select" aria-label="Filter by category">
+    <option value="">All categories</option>
+    <% categoryOptions.forEach(c => { %>
+      <option value="<%= c.id %>"><%= c.indent %><%= c.name %></option>
+    <% }) %>
+  </select>
+  <% } %>
 </div>
 
 <p id="no-results" class="empty hidden">No games match those filters.</p>

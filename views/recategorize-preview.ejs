@@ -1,0 +1,44 @@
+<%- include('partials/head', { title: 'Review Recategorize' }) %>
+
+<p><a href="/games/recategorize">&larr; Try a different file</a></p>
+<h1>Review Recategorize</h1>
+
+<% if (headerError) { %>
+  <p class="error"><%= headerError %></p>
+  <p><a href="/games/recategorize" class="btn">Back</a></p>
+<% } else if (rows.length === 0) { %>
+  <p class="empty">No rows found. Nothing to update.</p>
+<% } else { %>
+
+  <p class="hint">
+    <%= rows.length %> row<%= rows.length === 1 ? '' : 's' %> found. Rows that couldn't be matched to a
+    game or expansion by exact name are unchecked and highlighted, fix the name and try again, or leave
+    them unchecked to skip.
+  </p>
+
+  <form method="POST" action="/games/recategorize/save">
+    <% rows.forEach((r, i) => { %>
+      <div class="import-row-card <%= r.found ? '' : 'row-error' %>">
+        <div class="import-row-header">
+          <label class="import-include">
+            <input type="checkbox" name="include" value="<%= i %>" <%= r.found ? 'checked' : '' %>>
+            Row <%= r.row_number %>
+          </label>
+          <% if (!r.found) { %><span class="row-error-msg">No game or expansion named "<%= r.game_name %>" found</span><% } %>
+          <% if (r.found) { %><span class="badge"><%= r.matchType %></span><% } %>
+          <% if (r.currentPath) { %><span class="badge badge-override">currently: <%= r.currentPath %></span><% } %>
+        </div>
+        <div class="import-row-fields">
+          <label class="span-3">Name<input type="text" name="game_name" value="<%= r.game_name %>" readonly></label>
+          <label class="span-3">New category path<input type="text" name="category_path" value="<%= r.category_path %>"></label>
+        </div>
+        <input type="hidden" name="match_type" value="<%= r.matchType || '' %>">
+        <input type="hidden" name="match_id" value="<%= r.matchId || '' %>">
+      </div>
+    <% }) %>
+    <button type="submit" class="btn">Apply Categories</button>
+  </form>
+
+<% } %>
+
+<%- include('partials/foot') %>

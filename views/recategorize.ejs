@@ -1,0 +1,35 @@
+<%- include('partials/head', { title: 'Recategorize Games' }) %>
+
+<p><a href="/categories">&larr; Categories</a></p>
+<h1>Recategorize Games</h1>
+<p class="hint">
+  Bulk-assign categories to games and expansions you already have. Two columns:
+  <code>game_name, category_path</code>. Each name is matched exactly (case-insensitive) against your
+  games and expansions, and the category path (e.g. <code>Strategy &gt; Deck Building</code>, up to 4
+  levels) is created automatically if it doesn't exist yet.
+</p>
+<p><a href="/games/recategorize/template" class="btn btn-small btn-secondary">Download starter template.csv</a></p>
+
+<form method="POST" action="/games/recategorize/preview" class="form-card" id="recategorize-form">
+  <label>Upload a CSV file
+    <input type="file" id="csv-file-input" accept=".csv,text/csv">
+  </label>
+  <label>...or paste CSV text here
+    <textarea name="rawCsv" id="raw-csv" rows="14" placeholder="game_name,category_path
+Catan,Strategy > Settlement Building
+Ticket to Ride,Strategy > Route Building"></textarea>
+  </label>
+  <button type="submit" class="btn">Preview</button>
+</form>
+
+<script>
+  document.getElementById('csv-file-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => { document.getElementById('raw-csv').value = reader.result; };
+    reader.readAsText(file);
+  });
+</script>
+
+<%- include('partials/foot') %>

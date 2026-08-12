@@ -83,3 +83,22 @@ CREATE TABLE IF NOT EXISTS wishlist_games (
   rules_text TEXT,
   created_at TIMESTAMP DEFAULT now()
 );
+
+-- Categories: a self-referencing tree, up to 4 levels deep (depth 1-4).
+-- This is separate from the free-text "genre" field - genre stays a quick
+-- flat tag, categories are for deliberately organizing a growing collection
+-- into a browsable hierarchy (e.g. Strategy > Deck Building > Dice-Driven).
+CREATE TABLE IF NOT EXISTS categories (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  parent_id INTEGER REFERENCES categories(id) ON DELETE CASCADE,
+  depth INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_id);
+
+ALTER TABLE games ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL;
+ALTER TABLE expansions ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL;
+ALTER TABLE wishlist_games ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_games_category ON games(category_id);
+CREATE INDEX IF NOT EXISTS idx_expansions_category ON expansions(category_id);

@@ -4,6 +4,7 @@
   const sortSelect = document.getElementById('sort-select');
   const genreSelect = document.getElementById('genre-select');
   const playersSelect = document.getElementById('players-select');
+  const categorySelect = document.getElementById('category-select');
   const noResults = document.getElementById('no-results');
 
   function escapeHtml(str) {
@@ -28,6 +29,7 @@
     const query = searchBox.value.trim().toLowerCase();
     const genre = genreSelect.value;
     const playerCount = playersSelect.value ? parseInt(playersSelect.value, 10) : null;
+    const categoryId = categorySelect ? (categorySelect.value ? parseInt(categorySelect.value, 10) : null) : null;
     const sortBy = sortSelect.value;
 
     let filtered = ALL_GAMES.filter(g => {
@@ -37,6 +39,13 @@
         const min = g.min_players || 1;
         const max = g.max_players || 99;
         if (playerCount < min || playerCount > max) return false;
+      }
+      // Matching a category also matches any of its sub-categories: a game
+      // tagged "Strategy > Deck Building" should still show up when the
+      // person filters by just "Strategy".
+      if (categoryId) {
+        const ancestors = g.category_ancestor_ids || [];
+        if (!ancestors.includes(categoryId)) return false;
       }
       return true;
     });
@@ -61,11 +70,13 @@
           : `<div class="box-art-thumb box-art-placeholder">🎲</div>`}
         <h2>${escapeHtml(g.name)}</h2>
         <p class="meta">${formatMeta(g)}</p>
+        ${g.category_path ? `<p class="meta category-path-line">📁 ${escapeHtml(g.category_path)}</p>` : ''}
       </a>
     `).join('');
   }
 
-  [searchBox, sortSelect, genreSelect, playersSelect].forEach(el => {
+  [searchBox, sortSelect, genreSelect, playersSelect, categorySelect].forEach(el => {
+    if (!el) return;
     el.addEventListener('input', render);
     el.addEventListener('change', render);
   });

@@ -38,6 +38,8 @@ app.use('/', require('./routes/importGames')); // must be mounted before games r
 app.use('/', require('./routes/expansions')); // must be mounted before games router for the same reason (/games/:id/expansions/...)
 app.use('/', require('./routes/expansionRules'));
 app.use('/', require('./routes/wishlist'));
+app.use('/', require('./routes/categories'));
+app.use('/', require('./routes/recategorize'));
 app.use('/games', require('./routes/games'));
 app.use('/', require('./routes/baseRules'));
 app.use('/', require('./routes/houseRules'));

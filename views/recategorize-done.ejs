@@ -1,0 +1,11 @@
+<%- include('partials/head', { title: 'Recategorize Complete' }) %>
+
+<h1>Recategorize Complete</h1>
+<p><%= updatedCount %> item<%= updatedCount === 1 ? '' : 's' %> updated.</p>
+
+<p>
+  <a href="/categories" class="btn">View Categories</a>
+  <a href="/games" class="btn btn-secondary">Back to Games</a>
+</p>
+
+<%- include('partials/foot') %>

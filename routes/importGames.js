@@ -4,6 +4,7 @@ const pool = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { parseGamesCsv, CSV_TEMPLATE } = require('../db/parseGamesCsv');
 const { parseRulebook } = require('../db/parseRulebook');
+const { findOrCreateCategoryPath } = require('../db/categoryTree');
 
 // Download a starter CSV template (requires login, same as the rest of import)
 router.get('/games/import/template', requireAuth, (req, res) => {
@@ -35,7 +36,7 @@ router.post('/games/import/preview', requireAuth, (req, res) => {
 router.post('/games/import/save', requireAuth, async (req, res) => {
   let {
     name, publisher, genre, min_players, max_players, play_time_minutes,
-    cover_image_url, notes, rules_text, expansion_of, include
+    cover_image_url, notes, rules_text, expansion_of, category_path, include
   } = req.body;
 
   const toArray = v => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
@@ -49,6 +50,7 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
   notes = toArray(notes);
   rules_text = toArray(rules_text);
   expansion_of = toArray(expansion_of);
+  category_path = toArray(category_path);
   const includeSet = new Set(toArray(include));
 
   const client = await pool.connect();
@@ -90,9 +92,14 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
     for (const i of includedRows) {
       if (expansion_of[i] && expansion_of[i].trim()) continue;
 
+      let categoryId = null;
+      if (category_path[i] && category_path[i].trim()) {
+        categoryId = await findOrCreateCategoryPath(client, category_path[i].split('>'));
+      }
+
       const { rows } = await client.query(
-        `INSERT INTO games (name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+        `INSERT INTO games (name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, category_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
         [
           name[i].trim(),
           publisher[i] || null,
@@ -101,7 +108,8 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
           max_players[i] ? parseInt(max_players[i], 10) : null,
           play_time_minutes[i] ? parseInt(play_time_minutes[i], 10) : null,
           cover_image_url[i] || null,
-          notes[i] || null
+          notes[i] || null,
+          categoryId
         ]
       );
       insertedGamesCount++;
@@ -121,9 +129,14 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
         continue;
       }
 
+      let categoryId = null;
+      if (category_path[i] && category_path[i].trim()) {
+        categoryId = await findOrCreateCategoryPath(client, category_path[i].split('>'));
+      }
+
       const { rows } = await client.query(
-        `INSERT INTO expansions (game_id, name, min_players, max_players, play_time_minutes, cover_image_url, notes)
-         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+        `INSERT INTO expansions (game_id, name, min_players, max_players, play_time_minutes, cover_image_url, notes, category_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
         [
           parentId,
           name[i].trim(),
@@ -131,7 +144,8 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
           max_players[i] ? parseInt(max_players[i], 10) : null,
           play_time_minutes[i] ? parseInt(play_time_minutes[i], 10) : null,
           cover_image_url[i] || null,
-          notes[i] || null
+          notes[i] || null,
+          categoryId
         ]
       );
       insertedExpansionsCount++;

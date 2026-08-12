@@ -18,6 +18,15 @@
     <label>Max players<input type="number" name="max_players" min="1"></label>
   </div>
   <label>Play time (minutes)<input type="number" name="play_time_minutes" min="1" placeholder="e.g. 90"></label>
+  <label>Category (optional)
+    <select name="category_id">
+      <option value="">-- None --</option>
+      <% categoryOptions.forEach(c => { %>
+        <option value="<%= c.id %>"><%= c.indent %><%= c.name %></option>
+      <% }) %>
+    </select>
+    <a href="/categories" class="hint">Manage categories</a>
+  </label>
   <label>Box art URL
     <input type="url" name="cover_image_url" placeholder="https://... (paste a link from BGG or Google Images)">
   </label>

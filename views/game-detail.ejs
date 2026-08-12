@@ -25,6 +25,7 @@
       <% if (game.publisher) { %> &middot; <%= game.publisher %><% } %>
       <% if (expansions.length > 0) { %> &middot; <%= expansions.length %> expansion<%= expansions.length === 1 ? '' : 's' %><% } %>
     </p>
+    <% if (categoryPath) { %><p class="meta category-path-line">📁 <%= categoryPath %></p><% } %>
     <% if (game.notes) { %><p class="notes"><%= game.notes %></p><% } %>
   </div>
 </div>
@@ -47,6 +48,15 @@
       <label>Max players<input type="number" name="max_players" value="<%= game.max_players || '' %>"></label>
     </div>
     <label>Play time (minutes)<input type="number" name="play_time_minutes" value="<%= game.play_time_minutes || '' %>"></label>
+    <label>Category (optional)
+      <select name="category_id">
+        <option value="">-- None --</option>
+        <% categoryOptions.forEach(c => { %>
+          <option value="<%= c.id %>" <%= game.category_id === c.id ? 'selected' : '' %>><%= c.indent %><%= c.name %></option>
+        <% }) %>
+      </select>
+      <a href="/categories" class="hint">Manage categories</a>
+    </label>
     <label>Box art URL<input type="url" name="cover_image_url" value="<%= game.cover_image_url || '' %>"></label>
     <label>Notes<textarea name="notes" rows="3"><%= game.notes || '' %></textarea></label>
     <button type="submit" class="btn">Save Changes</button>

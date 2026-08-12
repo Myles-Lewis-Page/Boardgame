@@ -292,6 +292,32 @@ code {
 }
 .expansion-manage-header h3 { margin: 0 0 4px; }
 
+/* Category path shown on cards / game pages */
+.category-path-line {
+  font-size: 0.78rem;
+  opacity: 0.85;
+}
+
+/* Category tree management page */
+.category-tree {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.category-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.category-row:last-child { border-bottom: none; }
+.category-name { flex: 1; min-width: 140px; }
+.category-actions { display: flex; gap: 6px; }
+.category-rename-form { display: flex; gap: 6px; width: 100%; margin-top: 6px; }
+.category-rename-form input { flex: 1; min-height: 34px; }
+
 .form-card {
   background: var(--card);
   border: 1px solid var(--border);
