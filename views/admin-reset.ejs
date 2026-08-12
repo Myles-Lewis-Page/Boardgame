@@ -1,0 +1,24 @@
+<%- include('partials/head', { title: 'Reset Everything' }) %>
+
+<h1>Reset Everything</h1>
+
+<div class="form-card" style="border-color: var(--danger);">
+  <p><strong>This deletes every game, expansion, rule, house rule, wishlist entry, and category</strong> &mdash;
+  both the collection categories (Strategy/Party/etc.) and the rule sub-categories (Setup/Gameplay/etc.).
+  Box art links, login access, and the app itself are unaffected; you'll land on an empty library.</p>
+  <p><strong>This cannot be undone.</strong> There's no backup built into the app &mdash; if you want a record
+  of what's here first, this is the moment to go copy it out.</p>
+
+  <% if (typeof error !== 'undefined' && error) { %><p class="error"><%= error %></p><% } %>
+
+  <form method="POST" action="/admin/reset">
+    <label>Type <code>DELETE EVERYTHING</code> to confirm
+      <input type="text" name="confirm_text" placeholder="DELETE EVERYTHING" required autocomplete="off">
+    </label>
+    <button type="submit" class="btn btn-danger">Reset Everything</button>
+  </form>
+</div>
+
+<p><a href="/games">&larr; Never mind, take me back</a></p>
+
+<%- include('partials/foot') %>
