@@ -28,6 +28,7 @@
           <% if (g.play_time_minutes) { %> &middot; <%= g.play_time_minutes %> min<% } %>
         </p>
         <% if (g.rules_text) { %><p class="meta">📖 rules ready</p><% } %>
+        <% if (g.category_path) { %><p class="meta category-path-line">📁 <%= g.category_path %></p><% } %>
       </a>
     <% }) %>
   </div>

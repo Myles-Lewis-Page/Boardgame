@@ -1,0 +1,33 @@
+<%
+  // locals expected: s (section row), isAdmin, gameId, categoryOptionsForSrc (flat list for the dropdown)
+  const editAction = s.expansion_id === null ? `/base-rules/${s.id}/edit` : `/expansion-base-rules/${s.id}/edit`;
+  const deleteAction = s.expansion_id === null ? `/base-rules/${s.id}/delete` : `/expansion-base-rules/${s.id}/delete`;
+  const uncategorizeAction = s.expansion_id === null ? `/base-rules/${s.id}/uncategorize` : `/expansion-base-rules/${s.id}/uncategorize`;
+%>
+<div class="rule-card searchable" data-source="<%= sourceKey %>" id="section-<%= s.id %>" data-search-text="<%= (s.title + ' ' + s.body).toLowerCase().replace(/"/g,'&quot;') %>">
+  <h3><%= s.title %></h3>
+  <div class="rule-body-view"><%= s.body %></div>
+  <% if (isAdmin) { %>
+  <button class="btn btn-tiny" onclick="this.parentElement.querySelector('.edit-form').classList.toggle('hidden')">Edit</button>
+  <form class="edit-form hidden" method="POST" action="<%= editAction %>">
+    <input type="hidden" name="gameId" value="<%= gameId %>">
+    <% if (s.expansion_id !== null) { %><input type="hidden" name="expId" value="<%= s.expansion_id %>"><% } %>
+    <label>Title<input type="text" name="title" value="<%= s.title %>"></label>
+    <label>Body<textarea name="body" rows="6"><%= s.body %></textarea></label>
+    <label>Rule category path (leave blank to keep current)
+      <input type="text" name="rule_category_path" placeholder="e.g. Gameplay > Development Cards" list="rule-cat-suggestions-<%= sourceKey %>">
+    </label>
+    <button type="submit" class="btn btn-tiny">Save</button>
+  </form>
+  <form method="POST" action="<%= deleteAction %>" onsubmit="return confirm('Delete this section?')" class="inline-form">
+    <input type="hidden" name="gameId" value="<%= gameId %>">
+    <button type="submit" class="btn btn-tiny btn-danger">Delete</button>
+  </form>
+  <% if (s.rule_category_id) { %>
+  <form method="POST" action="<%= uncategorizeAction %>" class="inline-form">
+    <input type="hidden" name="gameId" value="<%= gameId %>">
+    <button type="submit" class="btn btn-tiny btn-secondary">Uncategorize</button>
+  </form>
+  <% } %>
+  <% } %>
+</div>

@@ -1,0 +1,47 @@
+<%- include('partials/head', { title: 'Review Recategorize' }) %>
+
+<p><a href="/games/recategorize-sections">&larr; Try a different file</a></p>
+<h1>Review Recategorize</h1>
+
+<% if (headerError) { %>
+  <p class="error"><%= headerError %></p>
+  <p><a href="/games/recategorize-sections" class="btn">Back</a></p>
+<% } else if (rows.length === 0) { %>
+  <p class="empty">No rows found. Nothing to update.</p>
+<% } else { %>
+
+  <p class="hint">
+    <%= rows.length %> row<%= rows.length === 1 ? '' : 's' %> found. Rows that couldn't be matched are
+    unchecked and highlighted, leave them unchecked to skip or fix the names and re-upload.
+  </p>
+
+  <form method="POST" action="/games/recategorize-sections/save">
+    <% rows.forEach((r, i) => { %>
+      <div class="import-row-card <%= r.found ? '' : 'row-error' %>">
+        <div class="import-row-header">
+          <label class="import-include">
+            <input type="checkbox" name="include" value="<%= i %>" <%= r.found ? 'checked' : '' %>>
+            Row <%= r.row_number %>
+          </label>
+          <% if (!r.found) { %><span class="row-error-msg"><%= r.notFoundReason %></span><% } %>
+          <% if (r.currentPath) { %><span class="badge badge-override">currently: <%= r.currentPath %></span><% } %>
+        </div>
+        <div class="import-row-fields">
+          <label class="span-3">Game<%= r.expansion_name ? ' / Expansion' : '' %>
+            <input type="text" value="<%= r.game_name %><%= r.expansion_name ? ' / ' + r.expansion_name : '' %>" readonly>
+          </label>
+          <label class="span-3">Section title<input type="text" value="<%= r.section_title %>" readonly></label>
+          <label class="span-3">New category path<input type="text" name="category_path" value="<%= r.category_path %>"></label>
+        </div>
+        <input type="hidden" name="section_title" value="<%= r.section_title %>">
+        <input type="hidden" name="section_id" value="<%= r.sectionId || '' %>">
+        <input type="hidden" name="game_id" value="<%= r.gameId || '' %>">
+        <input type="hidden" name="expansion_id" value="<%= r.expansionId || '' %>">
+      </div>
+    <% }) %>
+    <button type="submit" class="btn">Apply Categories</button>
+  </form>
+
+<% } %>
+
+<%- include('partials/foot') %>

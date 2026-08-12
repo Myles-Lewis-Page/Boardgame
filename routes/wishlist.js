@@ -4,6 +4,7 @@ const pool = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { parseRulebook } = require('../db/parseRulebook');
 const { parseGamesCsv, CSV_TEMPLATE } = require('../db/parseGamesCsv');
+const { pathForCategoryId } = require('../db/categoryTree');
 
 // ---- Bulk import (same CSV format as the games import, saved to the wishlist instead) ----
 
@@ -76,7 +77,9 @@ router.post('/wishlist/import/save', requireAuth, async (req, res) => {
 // List wishlist games (public)
 router.get('/wishlist', async (req, res) => {
   const { rows: wishlistGames } = await pool.query('SELECT * FROM wishlist_games ORDER BY name ASC');
-  res.render('wishlist-index', { wishlistGames });
+  const { rows: allCategories } = await pool.query('SELECT * FROM categories');
+  const withPaths = wishlistGames.map(g => ({ ...g, category_path: pathForCategoryId(g.category_id, allCategories) }));
+  res.render('wishlist-index', { wishlistGames: withPaths });
 });
 
 // New wishlist entry form (requires login)
@@ -102,7 +105,9 @@ router.get('/wishlist/:id', async (req, res) => {
   if (!rows.length) return res.status(404).send('Wishlist entry not found');
   const entry = rows[0];
   const previewSections = entry.rules_text ? parseRulebook(entry.rules_text) : [];
-  res.render('wishlist-detail', { entry, previewSections });
+  const { rows: allCategories } = await pool.query('SELECT * FROM categories');
+  const categoryPath = pathForCategoryId(entry.category_id, allCategories);
+  res.render('wishlist-detail', { entry, previewSections, categoryPath });
 });
 
 // Edit wishlist entry (requires login)

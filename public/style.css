@@ -318,6 +318,24 @@ code {
 .category-rename-form { display: flex; gap: 6px; width: 100%; margin-top: 6px; }
 .category-rename-form input { flex: 1; min-height: 34px; }
 
+/* Nested rule categories within the Rules tab */
+.rule-category-block {
+  border-left: 2px solid var(--border);
+  padding-left: 12px;
+  margin: 14px 0;
+}
+.rule-category-header {
+  font-size: 0.95rem;
+  color: var(--accent);
+  margin: 0 0 8px;
+}
+.toc-cat-header {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin: 6px 0 2px;
+}
+.btn-secondary.btn-tiny { background: var(--border); color: var(--text); }
+
 .form-card {
   background: var(--card);
   border: 1px solid var(--border);

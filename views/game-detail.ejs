@@ -97,12 +97,16 @@
     </label>
     <a id="paste-rulebook-link" href="/games/<%= game.id %>/base-rules/paste" class="btn">Paste Rulebook Text</a>
     <button class="btn btn-secondary" onclick="document.getElementById('add-section-form').classList.toggle('hidden')">+ Add Section Manually</button>
+    <a href="/games/recategorize-sections" class="btn btn-secondary btn-small">Bulk Recategorize Sections</a>
   </div>
 
   <div id="add-section-form" class="form-card hidden">
     <form id="add-section-form-el" method="POST" action="/games/<%= game.id %>/base-rules">
       <label>Section Title<input type="text" name="title" required></label>
       <label>Rule Text<textarea name="body" rows="4" required></textarea></label>
+      <label>Rule category (optional, up to 4 levels)
+        <input type="text" name="rule_category_path" placeholder="e.g. Gameplay > Development Cards > Knight Cards">
+      </label>
       <button type="submit" class="btn">Add Section</button>
     </form>
   </div>
@@ -120,10 +124,23 @@
       <% sources.forEach(src => {
         const sectionsForSrc = allSections.filter(s => (src.isBase ? s.expansion_id === null : s.expansion_id === src.expansionId));
         if (sectionsForSrc.length === 0) return;
+
+        const catRowsForSrc = allRuleCategories.filter(c => (src.isBase ? c.expansion_id === null : c.expansion_id === src.expansionId));
+        const catTree = buildRuleCategoryTree(catRowsForSrc);
+        const sectionsByCategory = new Map();
+        sectionsForSrc.forEach(s => {
+          if (!s.rule_category_id) return;
+          if (!sectionsByCategory.has(s.rule_category_id)) sectionsByCategory.set(s.rule_category_id, []);
+          sectionsByCategory.get(s.rule_category_id).push(s);
+        });
+        const uncategorized = sectionsForSrc.filter(s => !s.rule_category_id);
       %>
         <% if (expansions.length > 0) { %><div class="toc-subheader" data-source="<%= src.key %>"><%= src.label %></div><% } %>
-        <% sectionsForSrc.forEach(s => { %>
+        <% uncategorized.forEach(s => { %>
           <a href="#section-<%= s.id %>" class="toc-link" data-source="<%= src.key %>" data-scroll><%= s.title %></a>
+        <% }) %>
+        <% catTree.forEach(node => { %>
+          <%- include('partials/rule-category-toc-node', { node, sectionsByCategory, sourceKey: src.key }) %>
         <% }) %>
       <% }) %>
       <% if (allHouseRules.length > 0) { %>
@@ -135,28 +152,30 @@
       <% sources.forEach(src => {
         const sectionsForSrc = allSections.filter(s => (src.isBase ? s.expansion_id === null : s.expansion_id === src.expansionId));
         if (sectionsForSrc.length === 0) return;
+
+        const catRowsForSrc = allRuleCategories.filter(c => (src.isBase ? c.expansion_id === null : c.expansion_id === src.expansionId));
+        const catTree = buildRuleCategoryTree(catRowsForSrc);
+        const sectionsByCategory = new Map();
+        sectionsForSrc.forEach(s => {
+          if (!s.rule_category_id) return;
+          if (!sectionsByCategory.has(s.rule_category_id)) sectionsByCategory.set(s.rule_category_id, []);
+          sectionsByCategory.get(s.rule_category_id).push(s);
+        });
+        const uncategorized = sectionsForSrc.filter(s => !s.rule_category_id);
       %>
         <% if (expansions.length > 0) { %><h2 class="source-group-header" data-source="<%= src.key %>"><%= src.label %></h2><% } %>
-        <% sectionsForSrc.forEach(s => { %>
-          <div class="rule-card searchable" data-source="<%= src.key %>" id="section-<%= s.id %>" data-search-text="<%= (s.title + ' ' + s.body).toLowerCase().replace(/"/g,'&quot;') %>">
-            <h3><%= s.title %></h3>
-            <div class="rule-body-view"><%= s.body %></div>
-            <% if (isAdmin) { %>
-            <button class="btn btn-tiny" onclick="this.parentElement.querySelector('.edit-form').classList.toggle('hidden')">Edit</button>
-            <% const editAction = s.expansion_id === null ? `/base-rules/${s.id}/edit` : `/expansion-base-rules/${s.id}/edit`; %>
-            <% const deleteAction = s.expansion_id === null ? `/base-rules/${s.id}/delete` : `/expansion-base-rules/${s.id}/delete`; %>
-            <form class="edit-form hidden" method="POST" action="<%= editAction %>">
-              <input type="hidden" name="gameId" value="<%= game.id %>">
-              <label>Title<input type="text" name="title" value="<%= s.title %>"></label>
-              <label>Body<textarea name="body" rows="6"><%= s.body %></textarea></label>
-              <button type="submit" class="btn btn-tiny">Save</button>
-            </form>
-            <form method="POST" action="<%= deleteAction %>" onsubmit="return confirm('Delete this section?')" class="inline-form">
-              <input type="hidden" name="gameId" value="<%= game.id %>">
-              <button type="submit" class="btn btn-tiny btn-danger">Delete</button>
-            </form>
-            <% } %>
-          </div>
+        <% if (isAdmin && catRowsForSrc.length > 0) { %>
+          <datalist id="rule-cat-suggestions-<%= src.key %>">
+            <% catRowsForSrc.forEach(c => { %>
+              <option value="<%= pathForRuleCategoryId(c.id, catRowsForSrc) %>">
+            <% }) %>
+          </datalist>
+        <% } %>
+        <% uncategorized.forEach(s => { %>
+          <%- include('partials/rule-section-card', { s, isAdmin, gameId: game.id, sourceKey: src.key }) %>
+        <% }) %>
+        <% catTree.forEach(node => { %>
+          <%- include('partials/rule-category-node', { node, sectionsByCategory, isAdmin, gameId: game.id, sourceKey: src.key }) %>
         <% }) %>
       <% }) %>
     </div>

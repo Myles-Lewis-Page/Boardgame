@@ -1,0 +1,36 @@
+<%- include('partials/head', { title: 'Recategorize Rule Sections' }) %>
+
+<p><a href="/games">&larr; Games</a></p>
+<h1>Recategorize Rule Sections</h1>
+<p class="hint">
+  Bulk-assign nested categories (up to 4 levels) to rule sections you've already added. Four columns:
+  <code>game_name, expansion_name, section_title, category_path</code>. Leave <code>expansion_name</code>
+  blank for a base game's own section. Each row is matched by exact game (+ expansion) and exact section
+  title, and the category path (e.g. <code>Gameplay &gt; Development Cards &gt; Knight Cards</code>) is
+  created automatically if it doesn't exist yet.
+</p>
+<p><a href="/games/recategorize-sections/template" class="btn btn-small btn-secondary">Download starter template.csv</a></p>
+
+<form method="POST" action="/games/recategorize-sections/preview" class="form-card" id="recategorize-sections-form">
+  <label>Upload a CSV file
+    <input type="file" id="csv-file-input" accept=".csv,text/csv">
+  </label>
+  <label>...or paste CSV text here
+    <textarea name="rawCsv" id="raw-csv" rows="14" placeholder="game_name,expansion_name,section_title,category_path
+Catan,,Trading,Gameplay
+Catan,,Development Cards,Gameplay > Development Cards"></textarea>
+  </label>
+  <button type="submit" class="btn">Preview</button>
+</form>
+
+<script>
+  document.getElementById('csv-file-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => { document.getElementById('raw-csv').value = reader.result; };
+    reader.readAsText(file);
+  });
+</script>
+
+<%- include('partials/foot') %>

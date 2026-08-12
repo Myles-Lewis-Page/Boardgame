@@ -24,6 +24,7 @@
       <% if (entry.play_time_minutes) { %> &middot; <%= entry.play_time_minutes %> min<% } %>
       <% if (entry.publisher) { %> &middot; <%= entry.publisher %><% } %>
     </p>
+    <% if (categoryPath) { %><p class="meta category-path-line">📁 <%= categoryPath %></p><% } %>
     <% if (entry.notes) { %><p class="notes"><%= entry.notes %></p><% } %>
   </div>
 </div>

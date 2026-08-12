@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { buildCategoryTree, flattenForSelect, annotatePathLabels, pathForCategoryId } = require('../db/categoryTree');
+const { buildTree: buildRuleCategoryTree, pathForRuleCategoryId } = require('../db/ruleCategoryTree');
 
 async function getCategorySelectOptions() {
   const { rows } = await pool.query('SELECT * FROM categories ORDER BY depth ASC, name ASC');
@@ -86,6 +87,14 @@ router.get('/:id', async (req, res) => {
     [id]
   );
 
+  // All rule categories belonging to this game (its own base-game categories
+  // plus every expansion's, since rule_categories.game_id always points at
+  // the top-level game regardless of which expansion a category is under).
+  const { rows: allRuleCategories } = await pool.query(
+    'SELECT * FROM rule_categories WHERE game_id = $1 ORDER BY depth ASC, name ASC',
+    [id]
+  );
+
   // "sources" is the ordered list of things rules can belong to: the base
   // game first, then each owned expansion. Used to build filter chips, the
   // grouped table of contents, and the "add rules for..." picker.
@@ -104,6 +113,7 @@ router.get('/:id', async (req, res) => {
     game, expansions, sources,
     allSections, allHouseRules,
     baseSections, baseHouseRules,
+    allRuleCategories, buildRuleCategoryTree, pathForRuleCategoryId,
     categoryOptions, categoryPath
   });
 });

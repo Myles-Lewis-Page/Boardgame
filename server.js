@@ -40,6 +40,7 @@ app.use('/', require('./routes/expansionRules'));
 app.use('/', require('./routes/wishlist'));
 app.use('/', require('./routes/categories'));
 app.use('/', require('./routes/recategorize'));
+app.use('/', require('./routes/recategorizeSections'));
 app.use('/games', require('./routes/games'));
 app.use('/', require('./routes/baseRules'));
 app.use('/', require('./routes/houseRules'));

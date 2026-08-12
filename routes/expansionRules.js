@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../db');
 const { parseRulebook } = require('../db/parseRulebook');
 const { requireAuth } = require('../middleware/auth');
+const { findOrCreateRuleCategoryPath } = require('../db/ruleCategoryTree');
 
 // ---- Base rules for an expansion ----
 // These still read/write rows scoped to a specific expansion, but every
@@ -55,21 +56,65 @@ router.post('/games/:gameId/expansions/:expId/base-rules/save', requireAuth, asy
 
 router.post('/games/:gameId/expansions/:expId/base-rules', requireAuth, async (req, res) => {
   const { gameId, expId } = req.params;
-  const { title, body } = req.body;
+  const { title, body, rule_category_path } = req.body;
   const { rows } = await pool.query(
     'SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_order FROM base_rule_sections WHERE expansion_id = $1',
     [expId]
   );
-  await pool.query(
-    'INSERT INTO base_rule_sections (game_id, expansion_id, title, body, sort_order) VALUES ($1, $2, $3, $4, $5)',
-    [gameId, expId, title, body, rows[0].next_order]
-  );
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    let ruleCategoryId = null;
+    if (rule_category_path && rule_category_path.trim()) {
+      ruleCategoryId = await findOrCreateRuleCategoryPath(client, gameId, expId, rule_category_path.split('>'));
+    }
+    await client.query(
+      'INSERT INTO base_rule_sections (game_id, expansion_id, title, body, sort_order, rule_category_id) VALUES ($1, $2, $3, $4, $5, $6)',
+      [gameId, expId, title, body, rows[0].next_order, ruleCategoryId]
+    );
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+
   res.redirect(`/games/${gameId}#tab-rules`);
 });
 
 router.post('/expansion-base-rules/:id/edit', requireAuth, async (req, res) => {
-  const { title, body, gameId } = req.body;
-  await pool.query('UPDATE base_rule_sections SET title=$1, body=$2 WHERE id=$3', [title, body, req.params.id]);
+  const { title, body, gameId, expId, rule_category_path } = req.body;
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    let ruleCategoryId;
+    if (rule_category_path && rule_category_path.trim()) {
+      ruleCategoryId = await findOrCreateRuleCategoryPath(client, gameId, expId, rule_category_path.split('>'));
+    } else {
+      const { rows } = await client.query('SELECT rule_category_id FROM base_rule_sections WHERE id = $1', [req.params.id]);
+      ruleCategoryId = rows.length ? rows[0].rule_category_id : null;
+    }
+    await client.query(
+      'UPDATE base_rule_sections SET title=$1, body=$2, rule_category_id=$3 WHERE id=$4',
+      [title, body, ruleCategoryId, req.params.id]
+    );
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+
+  res.redirect(`/games/${gameId}#tab-rules`);
+});
+
+router.post('/expansion-base-rules/:id/uncategorize', requireAuth, async (req, res) => {
+  const { gameId } = req.body;
+  await pool.query('UPDATE base_rule_sections SET rule_category_id = NULL WHERE id = $1', [req.params.id]);
   res.redirect(`/games/${gameId}#tab-rules`);
 });
 

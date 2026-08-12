@@ -73,7 +73,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // TOC entries and group headers follow the same source filter
     if (visibleSources) {
       document.querySelectorAll('[data-source]').forEach(el => {
-        if (el.classList.contains('toc-link') || el.classList.contains('toc-subheader') || el.classList.contains('source-group-header')) {
+        if (
+          el.classList.contains('toc-link') ||
+          el.classList.contains('toc-subheader') ||
+          el.classList.contains('toc-cat-header') ||
+          el.classList.contains('source-group-header') ||
+          el.classList.contains('rule-category-block')
+        ) {
           el.classList.toggle('hidden', !visibleSources.has(el.dataset.source));
         }
       });
@@ -84,6 +90,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const targetId = link.getAttribute('href').slice(1);
       const target = document.getElementById(targetId);
       if (target && target.classList.contains('hidden')) link.classList.add('hidden');
+    });
+
+    // A category block with no visible rule cards anywhere underneath it
+    // (after both filters) collapses too, so search doesn't leave behind
+    // hollow category headers with nothing under them.
+    document.querySelectorAll('.rule-category-block').forEach(block => {
+      const hasVisibleSection = block.querySelector('.rule-card.searchable:not(.hidden)');
+      block.classList.toggle('hidden', !hasVisibleSection);
+    });
+    document.querySelectorAll('.toc-cat-header').forEach(header => {
+      const contentBlock = document.getElementById('rulecat-' + header.dataset.catId);
+      if (contentBlock) header.classList.toggle('hidden', contentBlock.classList.contains('hidden'));
     });
   }
 

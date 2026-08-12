@@ -1,0 +1,11 @@
+<%- include('partials/head', { title: 'Recategorize Complete' }) %>
+
+<h1>Recategorize Complete</h1>
+<p><%= updatedCount %> rule section<%= updatedCount === 1 ? '' : 's' %> updated.</p>
+
+<p>
+  <a href="/games" class="btn">Back to Games</a>
+  <a href="/games/recategorize-sections" class="btn btn-secondary">Recategorize More</a>
+</p>
+
+<%- include('partials/foot') %>

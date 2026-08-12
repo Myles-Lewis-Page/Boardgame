@@ -102,3 +102,25 @@ ALTER TABLE expansions ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES c
 ALTER TABLE wishlist_games ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_games_category ON games(category_id);
 CREATE INDEX IF NOT EXISTS idx_expansions_category ON expansions(category_id);
+
+-- Rule categories: a self-referencing tree, up to 4 levels deep, used to
+-- organize a game's (or an expansion's) rule SECTIONS into a nested table
+-- of contents, e.g. "Gameplay > Development Cards > Knight Cards". Scoped
+-- per game_id (+ expansion_id when it belongs to an expansion's own
+-- rulebook rather than the base game's), since "Setup" in one game's
+-- rulebook has nothing to do with "Setup" in another's.
+CREATE TABLE IF NOT EXISTS rule_categories (
+  id SERIAL PRIMARY KEY,
+  game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+  expansion_id INTEGER REFERENCES expansions(id) ON DELETE CASCADE,
+  parent_id INTEGER REFERENCES rule_categories(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  depth INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_rule_categories_game ON rule_categories(game_id);
+CREATE INDEX IF NOT EXISTS idx_rule_categories_expansion ON rule_categories(expansion_id);
+CREATE INDEX IF NOT EXISTS idx_rule_categories_parent ON rule_categories(parent_id);
+
+ALTER TABLE base_rule_sections ADD COLUMN IF NOT EXISTS rule_category_id INTEGER REFERENCES rule_categories(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_base_rule_sections_rule_category ON base_rule_sections(rule_category_id);
