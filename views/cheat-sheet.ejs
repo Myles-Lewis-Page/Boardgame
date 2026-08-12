@@ -1,0 +1,58 @@
+<%- include('partials/head', { title: game.name + ' - Cheat Sheet' }) %>
+
+<p><a href="/games/<%= game.id %>">&larr; Full rules for <%= game.name %></a></p>
+
+<div class="cheat-sheet-header">
+  <% if (game.cover_image_url) { %><img class="box-art" src="<%= game.cover_image_url %>" alt="<%= game.name %> box art"><% } %>
+  <h1><%= game.name %> <span class="badge">cheat sheet</span></h1>
+</div>
+
+<% const hasAnyCheatContent = game.cheat_turn_order || game.cheat_scoring || game.cheat_win_condition; %>
+
+<% if (!hasAnyCheatContent && !isAdmin) { %>
+  <p class="empty">No cheat sheet written for this game yet.</p>
+<% } else { %>
+
+<div class="cheat-sheet-grid">
+  <div class="cheat-sheet-card">
+    <h2>🔄 Turn Order</h2>
+    <% if (game.cheat_turn_order) { %>
+      <div class="cheat-sheet-body"><%= game.cheat_turn_order %></div>
+    <% } else { %>
+      <p class="empty">Not written yet.</p>
+    <% } %>
+  </div>
+  <div class="cheat-sheet-card">
+    <h2>🏆 Scoring</h2>
+    <% if (game.cheat_scoring) { %>
+      <div class="cheat-sheet-body"><%= game.cheat_scoring %></div>
+    <% } else { %>
+      <p class="empty">Not written yet.</p>
+    <% } %>
+  </div>
+  <div class="cheat-sheet-card">
+    <h2>🎯 Win Condition</h2>
+    <% if (game.cheat_win_condition) { %>
+      <div class="cheat-sheet-body"><%= game.cheat_win_condition %></div>
+    <% } else { %>
+      <p class="empty">Not written yet.</p>
+    <% } %>
+  </div>
+</div>
+<% } %>
+
+<% if (isAdmin) { %>
+<div class="form-card">
+  <button class="btn btn-secondary" onclick="document.getElementById('edit-cheat-sheet').classList.toggle('hidden')">
+    <%= hasAnyCheatContent ? 'Edit Cheat Sheet' : '+ Write a Cheat Sheet' %>
+  </button>
+  <form id="edit-cheat-sheet" method="POST" action="/games/<%= game.id %>/cheat-sheet" class="hidden">
+    <label>Turn Order<textarea name="cheat_turn_order" rows="4" placeholder="e.g. Clockwise. Each turn: roll, move, resolve, optionally build."><%= game.cheat_turn_order || '' %></textarea></label>
+    <label>Scoring<textarea name="cheat_scoring" rows="4" placeholder="e.g. 1pt per settlement, 2pt per city, +2 for Longest Road, +2 for Largest Army."><%= game.cheat_scoring || '' %></textarea></label>
+    <label>Win Condition<textarea name="cheat_win_condition" rows="3" placeholder="e.g. First to 10 victory points on your own turn."><%= game.cheat_win_condition || '' %></textarea></label>
+    <button type="submit" class="btn">Save Cheat Sheet</button>
+  </form>
+</div>
+<% } %>
+
+<%- include('partials/foot') %>

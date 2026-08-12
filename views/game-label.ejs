@@ -1,0 +1,21 @@
+<%- include('partials/head', { title: game.name + ' - Label' }) %>
+
+<p class="no-print"><a href="/games/<%= game.id %>">&larr; Back to <%= game.name %></a></p>
+<p class="no-print hint">Print this page, or right-click the QR code to save just the image. Sized to fit on a small shelf sticker.</p>
+<button class="btn no-print" onclick="window.print()">Print</button>
+
+<div class="print-label">
+  <div class="print-label-title"><%= game.name %></div>
+  <img class="print-label-qr" src="/games/<%= game.id %>/qr.png" alt="QR code linking to <%= game.name %>">
+  <div class="print-label-hint">Scan for rules</div>
+</div>
+
+<%- include('partials/foot') %>
+
+<style>
+  @media print {
+    .no-print, header, .topbar { display: none !important; }
+    body { background: white; color: black; }
+    .print-label { border: none; }
+  }
+</style>

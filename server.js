@@ -55,6 +55,8 @@ app.use('/', require('./routes/recategorize'));
 app.use('/', require('./routes/recategorizeSections'));
 app.use('/', require('./routes/updateBoxArt'));
 app.use('/', require('./routes/linkVariants'));
+app.use('/', require('./routes/cheatSheet'));
+app.use('/', require('./routes/randomizer'));
 app.use('/games', require('./routes/games'));
 app.use('/', require('./routes/baseRules'));
 app.use('/', require('./routes/houseRules'));

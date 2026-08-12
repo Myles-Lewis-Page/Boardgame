@@ -31,6 +31,14 @@ CREATE INDEX IF NOT EXISTS idx_games_owned ON games(owned);
 ALTER TABLE games ADD COLUMN IF NOT EXISTS variant_of_id INTEGER REFERENCES games(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_games_variant_of ON games(variant_of_id);
 
+-- Cheat sheet: a short, hand-curated summary (not auto-extracted from the
+-- rulebook, since that's rarely concise) for a quick glance mid-game.
+-- One per game - deliberately not per-expansion, since a cheat sheet is
+-- about how to actually play, which usually doesn't change per expansion.
+ALTER TABLE games ADD COLUMN IF NOT EXISTS cheat_turn_order TEXT;
+ALTER TABLE games ADD COLUMN IF NOT EXISTS cheat_scoring TEXT;
+ALTER TABLE games ADD COLUMN IF NOT EXISTS cheat_win_condition TEXT;
+
 -- Expansions: each belongs to a parent game. Their rules (base + house)
 -- live in the same tables as the parent game's rules, scoped by expansion_id.
 CREATE TABLE IF NOT EXISTS expansions (

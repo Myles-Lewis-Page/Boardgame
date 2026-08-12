@@ -1,0 +1,30 @@
+<%- include('partials/head', { title: 'What Should We Play?' }) %>
+
+<h1>What Should We Play?</h1>
+<p class="hint">Tell us who's here and how long you've got, we'll pick something.</p>
+
+<% if (games.length === 0) { %>
+  <p class="empty">No owned games yet - add some first.</p>
+<% } else { %>
+
+<div class="randomizer-form form-card">
+  <label>How many players?
+    <input type="number" id="rnd-players" min="1" value="4">
+  </label>
+  <label>How much time do you have? (minutes, optional)
+    <input type="number" id="rnd-time" min="1" placeholder="leave blank for any length">
+  </label>
+  <button class="btn" id="rnd-pick-btn">🎲 Pick a Game</button>
+</div>
+
+<div id="rnd-result" class="randomizer-result hidden"></div>
+<p id="rnd-no-match" class="empty hidden">Nothing in your library fits that exactly - try widening the time, or check your player count.</p>
+
+<script>
+  const ALL_GAMES = <%- JSON.stringify(games) %>;
+</script>
+<script src="/randomizer.js"></script>
+
+<% } %>
+
+<%- include('partials/foot') %>
