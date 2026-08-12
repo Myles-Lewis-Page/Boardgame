@@ -42,6 +42,7 @@ app.use('/', require('./routes/categories'));
 app.use('/', require('./routes/recategorize'));
 app.use('/', require('./routes/recategorizeSections'));
 app.use('/', require('./routes/reset'));
+app.use('/', require('./routes/exportNames'));
 app.use('/games', require('./routes/games'));
 app.use('/', require('./routes/baseRules'));
 app.use('/', require('./routes/houseRules'));
