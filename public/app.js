@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.classList.toggle('hidden', !sourceOk);
     });
 
-    // TOC entries and group headers follow the same source filter
+    // TOC entries, group headers, and setup options follow the same source filter
     if (visibleSources) {
       document.querySelectorAll('[data-source]').forEach(el => {
         if (
@@ -78,7 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
           el.classList.contains('toc-subheader') ||
           el.classList.contains('toc-cat-header') ||
           el.classList.contains('source-group-header') ||
-          el.classList.contains('rule-category-block')
+          el.classList.contains('rule-category-block') ||
+          el.classList.contains('setup-option-card')
         ) {
           el.classList.toggle('hidden', !visibleSources.has(el.dataset.source));
         }
