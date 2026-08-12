@@ -7,6 +7,18 @@ const path = require('path');
 const pool = require('./db');
 const { attachAuthLocals } = require('./middleware/auth');
 
+// Safety net: log unexpected errors instead of letting the whole process
+// die from something outside a request cycle. Route-level errors are
+// handled by asyncHandler + the Express error middleware below; this is
+// just the last line of defense so one bad background error can't take
+// the entire app down.
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled promise rejection:', err);
+});
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
+});
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -42,6 +54,7 @@ app.use('/', require('./routes/categories'));
 app.use('/', require('./routes/recategorize'));
 app.use('/', require('./routes/recategorizeSections'));
 app.use('/', require('./routes/updateBoxArt'));
+app.use('/', require('./routes/linkVariants'));
 app.use('/games', require('./routes/games'));
 app.use('/', require('./routes/baseRules'));
 app.use('/', require('./routes/houseRules'));

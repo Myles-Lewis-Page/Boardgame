@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { asyncHandler } = require('../middleware/asyncHandler');
 const { buildCategoryTree, flattenForSelect, annotatePathLabels, pathForCategoryId } = require('../db/categoryTree');
 const { buildTree: buildRuleCategoryTree, pathForRuleCategoryId } = require('../db/ruleCategoryTree');
 
@@ -27,7 +28,7 @@ async function getVariantOptions(excludeId) {
 // as expansions - they're reached via the canonical game's "Variations"
 // list instead of cluttering the main grid with near-duplicate cards.
 // Sort/filter/search happens client-side via embedded JSON, so it's instant.
-router.get('/', async (req, res) => {
+router.get('/', asyncHandler(async (req, res) => {
   const { rows: games } = await pool.query(`
     SELECT g.*, COALESCE(exp_counts.expansion_count, 0) AS expansion_count, vo.name AS variant_of_name
     FROM games g
@@ -57,18 +58,18 @@ router.get('/', async (req, res) => {
   });
 
   res.render('index', { games: gamesWithCategory, genres: genreRows.map(r => r.genre), categoryOptions });
-});
+}));
 
 // New game form (requires login)
-router.get('/new', requireAuth, async (req, res) => {
+router.get('/new', requireAuth, asyncHandler(async (req, res) => {
   const { flat: categoryOptions } = await getCategorySelectOptions();
   const variantOptions = await getVariantOptions();
   const defaultOwned = req.query.owned !== 'false'; // ?owned=false pre-unchecks it (used by the Wishlist "+ Add" button)
   res.render('new-game', { categoryOptions, variantOptions, defaultOwned });
-});
+}));
 
 // Create game (requires login)
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, asyncHandler(async (req, res) => {
   const { name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, category_id, owned, variant_of_id } = req.body;
   const { rows } = await pool.query(
     `INSERT INTO games (name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, category_id, owned, variant_of_id)
@@ -76,11 +77,11 @@ router.post('/', requireAuth, async (req, res) => {
     [name, publisher || null, genre || null, min_players || null, max_players || null, play_time_minutes || null, cover_image_url || null, notes || null, category_id || null, !!owned, variant_of_id || null]
   );
   res.redirect(`/games/${rows[0].id}`);
-});
+}));
 
 // Game detail: all rules (base game + every expansion, merged into one
 // browsable/searchable view) plus house rules, also merged (public)
-router.get('/:id', async (req, res) => {
+router.get('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { rows: gameRows } = await pool.query('SELECT * FROM games WHERE id = $1', [id]);
   if (!gameRows.length) return res.status(404).send('Game not found');
@@ -148,10 +149,10 @@ router.get('/:id', async (req, res) => {
     categoryOptions, categoryPath,
     variantOptions, variantOf, variations
   });
-});
+}));
 
 // Edit game info (requires login)
-router.post('/:id/edit', requireAuth, async (req, res) => {
+router.post('/:id/edit', requireAuth, asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { name, publisher, genre, min_players, max_players, play_time_minutes, cover_image_url, notes, category_id, owned, variant_of_id } = req.body;
   // A game can't be a variation of itself.
@@ -161,22 +162,22 @@ router.post('/:id/edit', requireAuth, async (req, res) => {
     [name, publisher || null, genre || null, min_players || null, max_players || null, play_time_minutes || null, cover_image_url || null, notes || null, category_id || null, !!owned, safeVariantOfId, id]
   );
   res.redirect(`/games/${id}`);
-});
+}));
 
 // Quick "mark owned" action from the wishlist/game page - just flips the
 // flag, no data copying needed since wishlist and owned games share the
 // same row and the same rules/expansions/house rules all along.
-router.post('/:id/mark-owned', requireAuth, async (req, res) => {
+router.post('/:id/mark-owned', requireAuth, asyncHandler(async (req, res) => {
   await pool.query('UPDATE games SET owned = true WHERE id = $1', [req.params.id]);
   res.redirect(`/games/${req.params.id}`);
-});
+}));
 
 // Copy the base game's rule sections into this variation - handy when two
 // variations share the same core rules (e.g. Monopoly: Here and Now and
 // Red Wingopoly are both standard Monopoly rules, just different property
 // names). Copies title/body only; the copies start uncategorized since rule
 // categories are scoped to each game individually.
-router.post('/:id/copy-rules-from-variant', requireAuth, async (req, res) => {
+router.post('/:id/copy-rules-from-variant', requireAuth, asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { sourceGameId } = req.body;
   if (!sourceGameId) return res.redirect(`/games/${id}`);
@@ -197,12 +198,12 @@ router.post('/:id/copy-rules-from-variant', requireAuth, async (req, res) => {
     );
   }
   res.redirect(`/games/${id}#tab-rules`);
-});
+}));
 
 // Delete game (requires login)
-router.post('/:id/delete', requireAuth, async (req, res) => {
+router.post('/:id/delete', requireAuth, asyncHandler(async (req, res) => {
   await pool.query('DELETE FROM games WHERE id = $1', [req.params.id]);
   res.redirect('/games');
-});
+}));
 
 module.exports = router;
