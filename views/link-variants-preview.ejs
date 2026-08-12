@@ -1,0 +1,43 @@
+<%- include('partials/head', { title: 'Review Variation Links' }) %>
+
+<p><a href="/games/link-variants">&larr; Try a different file</a></p>
+<h1>Review Variation Links</h1>
+
+<% if (headerError) { %>
+  <p class="error"><%= headerError %></p>
+  <p><a href="/games/link-variants" class="btn">Back</a></p>
+<% } else if (rows.length === 0) { %>
+  <p class="empty">No rows found. Nothing to link.</p>
+<% } else { %>
+
+  <p class="hint">
+    <%= rows.length %> row<%= rows.length === 1 ? '' : 's' %> found. Rows that couldn't be matched are
+    unchecked and highlighted.
+  </p>
+
+  <form method="POST" action="/games/link-variants/save">
+    <% rows.forEach((r, i) => { %>
+      <div class="import-row-card <%= r.found ? '' : 'row-error' %>">
+        <div class="import-row-header">
+          <label class="import-include">
+            <input type="checkbox" name="include" value="<%= i %>" <%= r.found ? 'checked' : '' %>>
+            Row <%= r.row_number %>
+          </label>
+          <% if (!r.found) { %><span class="row-error-msg"><%= r.notFoundReason %></span><% } %>
+          <% if (r.currentTargetName) { %><span class="badge badge-override">currently: variation of <%= r.currentTargetName %></span><% } %>
+        </div>
+        <div class="import-row-fields">
+          <label class="span-3">Game<input type="text" value="<%= r.game_name %>" readonly></label>
+          <label class="span-3">Variation of<input type="text" value="<%= r.variant_of %>" readonly></label>
+        </div>
+        <input type="hidden" name="game_name" value="<%= r.game_name %>">
+        <input type="hidden" name="gameId" value="<%= r.gameId || '' %>">
+        <input type="hidden" name="targetId" value="<%= r.targetId || '' %>">
+      </div>
+    <% }) %>
+    <button type="submit" class="btn">Apply Links</button>
+  </form>
+
+<% } %>
+
+<%- include('partials/foot') %>

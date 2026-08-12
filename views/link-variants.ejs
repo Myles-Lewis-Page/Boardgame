@@ -1,0 +1,33 @@
+<%- include('partials/head', { title: 'Link Variations' }) %>
+
+<p><a href="/games">&larr; Games</a></p>
+<h1>Link Variations</h1>
+<p class="hint">
+  Bulk-link games you already have as variations of each other (same rules, different theme - e.g. a
+  city-branded Monopoly). Two columns: <code>game_name, variant_of</code>. Each name is matched exactly
+  (case-insensitive) against your games.
+</p>
+<p><a href="/games/link-variants/template" class="btn btn-small btn-secondary">Download starter template.csv</a></p>
+
+<form method="POST" action="/games/link-variants/preview" class="form-card" id="link-variants-form">
+  <label>Upload a CSV file
+    <input type="file" id="csv-file-input" accept=".csv,text/csv">
+  </label>
+  <label>...or paste CSV text here
+    <textarea name="rawCsv" id="raw-csv" rows="10" placeholder="game_name,variant_of
+Red Wingopoly,Monopoly: Here and Now"></textarea>
+  </label>
+  <button type="submit" class="btn">Preview</button>
+</form>
+
+<script>
+  document.getElementById('csv-file-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => { document.getElementById('raw-csv').value = reader.result; };
+    reader.readAsText(file);
+  });
+</script>
+
+<%- include('partials/foot') %>

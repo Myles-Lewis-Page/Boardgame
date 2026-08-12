@@ -37,7 +37,7 @@ router.post('/games/import/preview', requireAuth, (req, res) => {
 router.post('/games/import/save', requireAuth, async (req, res) => {
   let {
     name, publisher, genre, min_players, max_players, play_time_minutes,
-    cover_image_url, notes, rules_text, expansion_of, category_path, rule_categories, owned, include
+    cover_image_url, notes, rules_text, expansion_of, category_path, rule_categories, owned, variant_of, include
   } = req.body;
 
   const toArray = v => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
@@ -54,6 +54,7 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
   category_path = toArray(category_path);
   rule_categories = toArray(rule_categories);
   owned = toArray(owned);
+  variant_of = toArray(variant_of);
   const includeSet = new Set(toArray(include));
 
   const client = await pool.connect();
@@ -62,6 +63,7 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
   let sectionsInsertedCount = 0;
   let sectionsCategorizedCount = 0;
   let skippedExpansions = [];
+  let skippedVariants = [];
 
   // Inserts a game/expansion's rule sections AND, in the same pass, assigns
   // each one its rule sub-category based on the row's rule_categories
@@ -136,6 +138,24 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
       await insertRules(client, newGameId, null, rules_text[i], rule_categories[i]);
     }
 
+    // Pass 1b: variant_of links between standalone games - a second pass
+    // over the same rows so it doesn't matter which one appears first in
+    // the file. Only applies to standalone games, not expansions (a
+    // variation is a full top-level game, same as expansions can't be
+    // variations of each other).
+    for (const i of includedRows) {
+      if (expansion_of[i] && expansion_of[i].trim()) continue;
+      if (!variant_of[i] || !variant_of[i].trim()) continue;
+
+      const thisGameId = gameIdByName.get(name[i].trim().toLowerCase());
+      const targetId = gameIdByName.get(variant_of[i].trim().toLowerCase());
+      if (!thisGameId || !targetId || thisGameId === targetId) {
+        skippedVariants.push({ name: name[i].trim(), variant_of: variant_of[i].trim() });
+        continue;
+      }
+      await client.query('UPDATE games SET variant_of_id = $1 WHERE id = $2', [targetId, thisGameId]);
+    }
+
     // Pass 2: expansions - looked up against the map built above, which now
     // includes both pre-existing games and everything just created in pass 1.
     for (const i of includedRows) {
@@ -184,7 +204,8 @@ router.post('/games/import/save', requireAuth, async (req, res) => {
     insertedExpansionsCount,
     sectionsInsertedCount,
     sectionsCategorizedCount,
-    skippedExpansions
+    skippedExpansions,
+    skippedVariants
   });
 });
 

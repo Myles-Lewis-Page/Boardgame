@@ -19,6 +19,17 @@
   <p class="hint">Check the parent game's exact name (case-insensitive is fine, but spelling must match), then re-import just those rows.</p>
 <% } %>
 
+<% if (skippedVariants && skippedVariants.length > 0) { %>
+  <p class="error">
+    <%= skippedVariants.length %> row<%= skippedVariants.length === 1 ? '' : 's' %> couldn't be linked as a variation because the target game name didn't match anything:
+  </p>
+  <ul>
+    <% skippedVariants.forEach(s => { %>
+      <li>"<%= s.name %>" was set as a variation of "<%= s.variant_of %>", but no game with that exact name was found</li>
+    <% }) %>
+  </ul>
+<% } %>
+
 <p>
   <a href="/games" class="btn">Back to Games</a>
   <a href="/games/import" class="btn btn-secondary">Import More</a>

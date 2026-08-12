@@ -22,6 +22,15 @@ ALTER TABLE games ADD COLUMN IF NOT EXISTS cover_image_url TEXT;
 ALTER TABLE games ADD COLUMN IF NOT EXISTS owned BOOLEAN NOT NULL DEFAULT true;
 CREATE INDEX IF NOT EXISTS idx_games_owned ON games(owned);
 
+-- Variations: a different theme/reskin of the same underlying game (e.g.
+-- Monopoly: Here and Now and Red Wingopoly are both just Monopoly with
+-- different property names). This is deliberately separate from
+-- expansions - a variation is its own full top-level game (own box art,
+-- own owned/wishlist status, own rules if they differ), just tagged as
+-- being the same ruleset as another game rather than adding to it.
+ALTER TABLE games ADD COLUMN IF NOT EXISTS variant_of_id INTEGER REFERENCES games(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_games_variant_of ON games(variant_of_id);
+
 -- Expansions: each belongs to a parent game. Their rules (base + house)
 -- live in the same tables as the parent game's rules, scoped by expansion_id.
 CREATE TABLE IF NOT EXISTS expansions (

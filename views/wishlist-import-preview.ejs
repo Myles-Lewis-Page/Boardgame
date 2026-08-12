@@ -35,6 +35,9 @@
           <label>Minutes<input type="number" name="play_time_minutes" value="<%= g.play_time_minutes ?? '' %>"></label>
           <label class="span-2">Box art URL<input type="url" name="cover_image_url" value="<%= g.cover_image_url %>"></label>
           <label class="span-2">Notes<input type="text" name="notes" value="<%= g.notes %>"></label>
+          <label class="span-2">Category path (optional)
+            <input type="text" name="category_path" value="<%= g.category_path %>" placeholder="e.g. Strategy > Deck Building">
+          </label>
         </div>
 
         <label class="rules-text-label">

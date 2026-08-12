@@ -38,7 +38,7 @@ function parseCsvText(text) {
 
 const EXPECTED_HEADERS = [
   'name', 'publisher', 'genre', 'min_players', 'max_players',
-  'play_time_minutes', 'cover_image_url', 'notes', 'rules_text', 'expansion_of', 'category_path', 'rule_categories', 'owned'
+  'play_time_minutes', 'cover_image_url', 'notes', 'rules_text', 'expansion_of', 'category_path', 'rule_categories', 'owned', 'variant_of'
 ];
 
 /**
@@ -115,6 +115,7 @@ function parseGamesCsv(rawText) {
       // Blank/missing = owned (true) by default; only an explicit false-like
       // value opts a row into the wishlist instead.
       owned: !['false', 'no', '0', 'wishlist'].includes((raw.owned || '').trim().toLowerCase()),
+      variant_of: raw.variant_of || '',
       errors
     };
   });

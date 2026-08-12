@@ -34,6 +34,15 @@
   <label>Box art URL
     <input type="url" name="cover_image_url" placeholder="https://... (paste a link from BGG or Google Images)">
   </label>
+  <label>Variation of (optional)
+    <select name="variant_of_id">
+      <option value="">-- Not a variation of anything --</option>
+      <% variantOptions.forEach(v => { %>
+        <option value="<%= v.id %>"><%= v.name %></option>
+      <% }) %>
+    </select>
+    <span class="hint">Use this for a reskinned/retitled edition of a game you already have (e.g. a city-branded Monopoly). Its rules can stay separate or be copied over once added.</span>
+  </label>
   <label>Notes<textarea name="notes" rows="3"></textarea></label>
   <button type="submit" class="btn">Add Game</button>
 </form>

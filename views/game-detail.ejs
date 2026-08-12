@@ -31,9 +31,25 @@
       <% if (expansions.length > 0) { %> &middot; <%= expansions.length %> expansion<%= expansions.length === 1 ? '' : 's' %><% } %>
     </p>
     <% if (categoryPath) { %><p class="meta category-path-line">📁 <%= categoryPath %></p><% } %>
+    <% if (variantOf) { %><p class="meta category-path-line">🔀 Variation of <a href="/games/<%= variantOf.id %>"><%= variantOf.name %></a></p><% } %>
+    <% if (variations.length > 0) { %>
+    <p class="meta category-path-line">🔀 Variations:
+      <% variations.forEach((v, i) => { %><a href="/games/<%= v.id %>"><%= v.name %></a><%= v.owned ? '' : ' (wishlist)' %><%= i < variations.length - 1 ? ', ' : '' %><% }) %>
+    </p>
+    <% } %>
     <% if (game.notes) { %><p class="notes"><%= game.notes %></p><% } %>
   </div>
 </div>
+
+<% if (isAdmin && variantOf && allSections.length === 0) { %>
+<div class="form-card convert-card">
+  <p><strong>This is a variation of <%= variantOf.name %>.</strong> If the rules are the same (or close), you can copy them over instead of pasting them again.</p>
+  <form method="POST" action="/games/<%= game.id %>/copy-rules-from-variant">
+    <input type="hidden" name="sourceGameId" value="<%= variantOf.id %>">
+    <button type="submit" class="btn">Copy Rules from <%= variantOf.name %></button>
+  </form>
+</div>
+<% } %>
 
 <% if (isAdmin) { %>
 <div id="edit-game" class="form-card hidden">
@@ -67,6 +83,14 @@
       <a href="/categories" class="hint">Manage categories</a>
     </label>
     <label>Box art URL<input type="url" name="cover_image_url" value="<%= game.cover_image_url || '' %>"></label>
+    <label>Variation of (optional)
+      <select name="variant_of_id">
+        <option value="">-- Not a variation of anything --</option>
+        <% variantOptions.forEach(v => { %>
+          <option value="<%= v.id %>" <%= game.variant_of_id === v.id ? 'selected' : '' %>><%= v.name %></option>
+        <% }) %>
+      </select>
+    </label>
     <label>Notes<textarea name="notes" rows="3"><%= game.notes || '' %></textarea></label>
     <button type="submit" class="btn">Save Changes</button>
   </form>
