@@ -154,3 +154,53 @@ CREATE INDEX IF NOT EXISTS idx_setup_options_expansion ON setup_options(expansio
 -- separate House Rules tab.
 ALTER TABLE house_rules ADD COLUMN IF NOT EXISTS rule_category_id INTEGER REFERENCES rule_categories(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_house_rules_rule_category ON house_rules(rule_category_id);
+
+-- Score tracker: each game gets its own custom scoresheet, e.g. Wingspan's
+-- Birds / Bonus cards / Eggs / Nectar rows. A category can belong to a
+-- named group (the bold subheaders like "1 point each") for visual
+-- grouping only - it has no effect on scoring math. is_multiplier means
+-- the player enters a raw count and it's multiplied by multiplier_value
+-- to get points (e.g. "1 point each" categories use multiplier_value=1
+-- just to keep the math consistent); when false, the player enters the
+-- point value directly (e.g. Wingspan's Bonus cards, Round goals).
+CREATE TABLE IF NOT EXISTS score_categories (
+  id SERIAL PRIMARY KEY,
+  game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+  group_label TEXT,
+  label TEXT NOT NULL,
+  is_multiplier BOOLEAN NOT NULL DEFAULT false,
+  multiplier_value NUMERIC NOT NULL DEFAULT 1,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_score_categories_game ON score_categories(game_id);
+
+-- A single played session of a game. finished_at is NULL while the
+-- scoresheet is still being filled in live during play.
+CREATE TABLE IF NOT EXISTS game_sessions (
+  id SERIAL PRIMARY KEY,
+  game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+  started_at TIMESTAMP DEFAULT now(),
+  finished_at TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_game_sessions_game ON game_sessions(game_id);
+
+CREATE TABLE IF NOT EXISTS session_players (
+  id SERIAL PRIMARY KEY,
+  session_id INTEGER NOT NULL REFERENCES game_sessions(id) ON DELETE CASCADE,
+  player_name TEXT NOT NULL,
+  sort_order INTEGER DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_session_players_session ON session_players(session_id);
+
+-- One cell of the scoresheet: a player's raw entry for one category.
+-- "value" is always what the player typed (a count for multiplier
+-- categories, or the point total for direct-entry categories).
+CREATE TABLE IF NOT EXISTS session_scores (
+  id SERIAL PRIMARY KEY,
+  session_player_id INTEGER NOT NULL REFERENCES session_players(id) ON DELETE CASCADE,
+  score_category_id INTEGER NOT NULL REFERENCES score_categories(id) ON DELETE CASCADE,
+  value NUMERIC NOT NULL DEFAULT 0,
+  UNIQUE(session_player_id, score_category_id)
+);
+CREATE INDEX IF NOT EXISTS idx_session_scores_player ON session_scores(session_player_id);

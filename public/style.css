@@ -629,3 +629,90 @@ textarea { resize: vertical; }
   }
   .toc-house { margin-top: 0; border-top: none; border-left: 1px solid var(--border); padding-left: 12px; }
 }
+
+/* ---- Score tracker ---- */
+
+.score-cat-list { margin-bottom: 20px; }
+.score-cat-group-header {
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  margin: 16px 0 6px;
+}
+.score-cat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+.score-cat-info { display: flex; flex-direction: column; gap: 2px; }
+.score-cat-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.score-cat-actions .inline-form { display: inline; }
+
+.player-rows { display: flex; flex-direction: column; gap: 10px; max-width: 320px; }
+.player-rows input { width: 100%; }
+
+.scoresheet-wrap { overflow-x: auto; margin-bottom: 20px; }
+.scoresheet-table { border-collapse: collapse; width: 100%; min-width: 420px; }
+.scoresheet-table th, .scoresheet-table td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: center;
+}
+.scoresheet-table th { background: var(--card); }
+.score-row-label-col { text-align: left; white-space: nowrap; }
+.score-group-row td {
+  text-align: left;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  background: var(--bg);
+  border-left: none;
+  border-right: none;
+}
+.score-cell-input {
+  width: 64px;
+  text-align: center;
+  min-height: 36px;
+}
+.score-cell-error { border-color: var(--danger) !important; }
+.score-total-row td { font-weight: 700; background: var(--card); }
+.score-total-cell { font-size: 1.05rem; }
+
+.score-winner-banner {
+  background: var(--card);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.session-history-list { display: flex; flex-direction: column; gap: 10px; }
+.session-history-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  color: var(--text);
+  text-decoration: none;
+}
+.session-history-card:hover { background: var(--card-hover); }
+.session-history-winner { font-weight: 700; white-space: nowrap; }
+
+@media (max-width: 640px) {
+  .score-cat-row { flex-direction: column; align-items: flex-start; }
+  .score-cell-input { width: 52px; }
+}

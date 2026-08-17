@@ -1,0 +1,101 @@
+<%- include('partials/head', { title: session.game_name + ' - Scoresheet' }) %>
+
+<p><a href="/games/<%= session.game_id %>">&larr; <%= session.game_name %></a> &middot; <a href="/games/<%= session.game_id %>/sessions">Past games</a></p>
+
+<div class="game-header">
+  <h1><%= session.game_name %><% if (session.finished_at) { %> <span class="badge badge-wishlist">finished</span><% } %></h1>
+  <div class="game-actions">
+    <% if (!session.finished_at) { %>
+      <form method="POST" action="/sessions/<%= session.id %>/finish" onsubmit="return confirm('Finish the game? You can still reopen it later if you need to.')">
+        <button type="submit" class="btn btn-small">🏁 Finish Game</button>
+      </form>
+    <% } else if (isAdmin) { %>
+      <form method="POST" action="/sessions/<%= session.id %>/reopen" class="inline-form">
+        <button type="submit" class="btn btn-small btn-secondary">Reopen</button>
+      </form>
+    <% } %>
+    <% if (isAdmin) { %>
+      <form method="POST" action="/sessions/<%= session.id %>/delete" class="inline-form" onsubmit="return confirm('Delete this game session and all its scores?')">
+        <button type="submit" class="btn btn-small btn-danger">Delete</button>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<% if (categories.length === 0) { %>
+  <p class="empty">This game has no scoring categories set up yet. <a href="/games/<%= session.game_id %>/scoring/edit">Set them up</a>, then come back here.</p>
+<% } else { %>
+
+<% if (session.finished_at) {
+  const winner = players.reduce((a, b) => (b.total > a.total ? b : a), players[0]);
+%>
+  <p class="score-winner-banner">🏆 <strong><%= winner.player_name %></strong> wins with <strong><%= winner.total %></strong> points!</p>
+<% } %>
+
+<div class="scoresheet-wrap">
+<table class="scoresheet-table">
+  <thead>
+    <tr>
+      <th class="score-row-label-col"></th>
+      <% players.forEach(p => { %>
+        <th><%= p.player_name %></th>
+      <% }) %>
+    </tr>
+  </thead>
+  <tbody>
+    <% let lastGroup = null; %>
+    <% categories.forEach(c => { %>
+      <% if (c.group_label !== lastGroup) { %>
+        <tr class="score-group-row">
+          <td colspan="<%= players.length + 1 %>"><%= c.group_label %></td>
+        </tr>
+        <% lastGroup = c.group_label; %>
+      <% } %>
+      <tr>
+        <td class="score-row-label-col">
+          <%= c.label %>
+          <% if (c.is_multiplier) { %><span class="hint">&times;<%= c.multiplier_value %></span><% } %>
+        </td>
+        <% players.forEach(p => { %>
+          <td>
+            <input
+              type="number"
+              step="any"
+              class="score-cell-input"
+              data-player="<%= p.id %>"
+              data-category="<%= c.id %>"
+              data-multiplier="<%= c.is_multiplier ? c.multiplier_value : 1 %>"
+              value="<%= (scoreMap[p.id] && scoreMap[p.id][c.id]) || 0 %>"
+              <%= session.finished_at ? 'disabled' : '' %>
+            >
+          </td>
+        <% }) %>
+      </tr>
+    <% }) %>
+    <tr class="score-total-row">
+      <td class="score-row-label-col">Total</td>
+      <% players.forEach(p => { %>
+        <td class="score-total-cell" data-player-total="<%= p.id %>"><%= p.total %></td>
+      <% }) %>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<% if (!session.finished_at) { %>
+<div class="form-card">
+  <form method="POST" action="/sessions/<%= session.id %>/players" class="row">
+    <input type="text" name="player_name" placeholder="Add another player">
+    <button type="submit" class="btn btn-small btn-secondary">+ Add Player</button>
+  </form>
+</div>
+<% } %>
+
+<script>
+  const SESSION_ID = <%= session.id %>;
+</script>
+<script src="/scoresheet.js"></script>
+
+<% } %>
+
+<%- include('partials/foot') %>

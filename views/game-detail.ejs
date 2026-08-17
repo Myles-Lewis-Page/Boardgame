@@ -12,6 +12,11 @@
       <div class="game-actions">
         <a href="/games/<%= game.id %>/cheat-sheet" class="btn btn-small btn-secondary">📋 Cheat Sheet</a>
         <a href="/games/<%= game.id %>/label" class="btn btn-small btn-secondary">🔖 Print Label</a>
+        <a href="/games/<%= game.id %>/play/new" class="btn btn-small">🎲 Play Game</a>
+        <a href="/games/<%= game.id %>/sessions" class="btn btn-small btn-secondary">📜 Past Games</a>
+        <% if (isAdmin) { %>
+        <a href="/games/<%= game.id %>/scoring/edit" class="btn btn-small btn-secondary">⚙️ Scoring Setup</a>
+        <% } %>
         <% if (isAdmin) { %>
         <% if (!game.owned) { %>
         <form method="POST" action="/games/<%= game.id %>/mark-owned" class="inline-form">

@@ -1,0 +1,39 @@
+<%- include('partials/head', { title: 'Play ' + game.name }) %>
+
+<p><a href="/games/<%= game.id %>">&larr; <%= game.name %></a></p>
+
+<h1>Play <%= game.name %></h1>
+
+<% if (!hasCategories) { %>
+  <p class="empty">
+    This game doesn't have a scoresheet set up yet.
+    <a href="/games/<%= game.id %>/scoring/edit">Set up scoring categories</a> first, or start anyway and just track player names.
+  </p>
+<% } %>
+
+<p class="hint">Who's playing?</p>
+
+<form method="POST" action="/games/<%= game.id %>/play" id="play-new-form">
+  <div id="player-rows" class="player-rows">
+    <input type="text" name="player_name" placeholder="Player 1 name" required>
+    <input type="text" name="player_name" placeholder="Player 2 name">
+  </div>
+  <button type="button" class="btn btn-small btn-secondary" id="add-player-row-btn">+ Add Player</button>
+  <div class="row" style="margin-top:16px;">
+    <button type="submit" class="btn">🎲 Start Game</button>
+  </div>
+</form>
+
+<script>
+  document.getElementById('add-player-row-btn').addEventListener('click', () => {
+    const wrap = document.getElementById('player-rows');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'player_name';
+    input.placeholder = `Player ${wrap.children.length + 1} name`;
+    wrap.appendChild(input);
+    input.focus();
+  });
+</script>
+
+<%- include('partials/foot') %>

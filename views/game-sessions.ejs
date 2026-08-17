@@ -1,0 +1,33 @@
+<%- include('partials/head', { title: game.name + ' - Past Games' }) %>
+
+<p><a href="/games/<%= game.id %>">&larr; <%= game.name %></a></p>
+
+<div class="game-header">
+  <h1>Past games of <%= game.name %></h1>
+  <div class="game-actions">
+    <a href="/games/<%= game.id %>/play/new" class="btn btn-small">🎲 Play Again</a>
+  </div>
+</div>
+
+<% if (sessions.length === 0) { %>
+  <p class="empty">No games played yet. <a href="/games/<%= game.id %>/play/new">Start one</a>.</p>
+<% } else { %>
+  <div class="session-history-list">
+    <% sessions.forEach(s => { %>
+      <a href="/sessions/<%= s.id %>" class="session-history-card">
+        <div>
+          <strong><%= new Date(s.started_at).toLocaleDateString() %></strong>
+          <% if (!s.finished_at) { %><span class="badge badge-wishlist">in progress</span><% } %>
+          <div class="hint">
+            <% s.players.forEach((p, i) => { %><%= p.player_name %>: <%= p.total %><%= i < s.players.length - 1 ? ' &middot; ' : '' %><% }) %>
+          </div>
+        </div>
+        <% if (s.finished_at && s.winner) { %>
+          <div class="session-history-winner">🏆 <%= s.winner.player_name %></div>
+        <% } %>
+      </a>
+    <% }) %>
+  </div>
+<% } %>
+
+<%- include('partials/foot') %>
