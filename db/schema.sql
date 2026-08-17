@@ -163,6 +163,10 @@ CREATE INDEX IF NOT EXISTS idx_house_rules_rule_category ON house_rules(rule_cat
 -- to get points (e.g. "1 point each" categories use multiplier_value=1
 -- just to keep the math consistent); when false, the player enters the
 -- point value directly (e.g. Wingspan's Bonus cards, Round goals).
+-- is_award is for one-off bonuses only one player can hold at a time
+-- (Catan's Longest Road / Largest Army): instead of a number input it
+-- renders as a single set of radio buttons across all players, and
+-- whoever's picked scores multiplier_value points (everyone else scores 0).
 CREATE TABLE IF NOT EXISTS score_categories (
   id SERIAL PRIMARY KEY,
   game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
@@ -170,10 +174,12 @@ CREATE TABLE IF NOT EXISTS score_categories (
   label TEXT NOT NULL,
   is_multiplier BOOLEAN NOT NULL DEFAULT false,
   multiplier_value NUMERIC NOT NULL DEFAULT 1,
+  is_award BOOLEAN NOT NULL DEFAULT false,
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_score_categories_game ON score_categories(game_id);
+ALTER TABLE score_categories ADD COLUMN IF NOT EXISTS is_award BOOLEAN NOT NULL DEFAULT false;
 
 -- A single played session of a game. finished_at is NULL while the
 -- scoresheet is still being filled in live during play.

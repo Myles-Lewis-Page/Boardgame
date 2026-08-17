@@ -24,7 +24,7 @@ router.get('/games/:id/scoring/edit', requireAuth, asyncHandler(async (req, res)
 router.post('/games/:id/scoring/categories', requireAuth, asyncHandler(async (req, res) => {
   const game = await getGameOr404(req.params.id);
   if (!game) return res.status(404).send('Game not found');
-  const { label, group_label, is_multiplier, multiplier_value } = req.body;
+  const { label, group_label, is_multiplier, multiplier_value, is_award, award_value } = req.body;
   if (!label || !label.trim()) return res.redirect(`/games/${game.id}/scoring/edit`);
 
   const { rows: maxRows } = await pool.query(
@@ -33,15 +33,22 @@ router.post('/games/:id/scoring/categories', requireAuth, asyncHandler(async (re
   );
   const nextSort = maxRows[0].max_sort + 1;
 
+  const isAward = is_award === 'on';
+  const isMultiplier = !isAward && is_multiplier === 'on';
+  let multiplierValue = 1;
+  if (isAward) multiplierValue = parseFloat(award_value) || 1;
+  else if (isMultiplier) multiplierValue = parseFloat(multiplier_value) || 1;
+
   await pool.query(
-    `INSERT INTO score_categories (game_id, group_label, label, is_multiplier, multiplier_value, sort_order)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
+    `INSERT INTO score_categories (game_id, group_label, label, is_multiplier, multiplier_value, is_award, sort_order)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
     [
       game.id,
       group_label && group_label.trim() ? group_label.trim() : null,
       label.trim(),
-      is_multiplier === 'on',
-      is_multiplier === 'on' ? (parseFloat(multiplier_value) || 1) : 1,
+      isMultiplier,
+      multiplierValue,
+      isAward,
       nextSort
     ]
   );
@@ -158,7 +165,7 @@ async function loadSession(sessionId) {
     p.total = 0;
     categories.forEach(c => {
       const raw = (scoreMap[p.id] && scoreMap[p.id][c.id]) || 0;
-      const pts = c.is_multiplier ? raw * parseFloat(c.multiplier_value) : raw;
+      const pts = (c.is_multiplier || c.is_award) ? raw * parseFloat(c.multiplier_value) : raw;
       p.total += pts;
     });
   });
@@ -193,7 +200,7 @@ router.get('/sessions/:id/export.csv', asyncHandler(async (req, res) => {
     }
     const row = [c.label, ...players.map(p => {
       const raw = (scoreMap[p.id] && scoreMap[p.id][c.id]) || 0;
-      return c.is_multiplier ? raw * parseFloat(c.multiplier_value) : raw;
+      return (c.is_multiplier || c.is_award) ? raw * parseFloat(c.multiplier_value) : raw;
     })];
     lines.push(row.map(csvEscape).join(','));
   });
@@ -224,6 +231,42 @@ router.post('/sessions/:id/scores', asyncHandler(async (req, res) => {
   // Return the updated totals so the client can refresh without a full reload.
   const { rows: catRows } = await pool.query('SELECT * FROM score_categories WHERE id = $1', [score_category_id]);
   res.json({ ok: true, category: catRows[0] });
+}));
+
+// Award-type categories (Longest Road, Largest Army) are exclusive - only
+// one player can hold it. session_player_id is the new holder, or null/omitted
+// to clear the award entirely. Does the whole swap in one transaction so two
+// players never briefly show as holding it at once.
+router.post('/sessions/:id/scores/award', asyncHandler(async (req, res) => {
+  const { score_category_id, session_player_id } = req.body;
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(
+      `UPDATE session_scores SET value = 0
+       WHERE score_category_id = $1
+         AND session_player_id IN (SELECT id FROM session_players WHERE session_id = $2)`,
+      [score_category_id, req.params.id]
+    );
+    if (session_player_id) {
+      await client.query(
+        `INSERT INTO session_scores (session_player_id, score_category_id, value)
+         VALUES ($1, $2, 1)
+         ON CONFLICT (session_player_id, score_category_id)
+         DO UPDATE SET value = 1`,
+        [session_player_id, score_category_id]
+      );
+    }
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+
+  res.json({ ok: true });
 }));
 
 router.post('/sessions/:id/players', asyncHandler(async (req, res) => {
@@ -274,7 +317,7 @@ router.get('/games/:id/sessions', asyncHandler(async (req, res) => {
   for (const s of sessions) {
     const { rows: players } = await pool.query(
       `SELECT sp.id, sp.player_name,
-        COALESCE(SUM(CASE WHEN sc.is_multiplier THEN ss.value * sc.multiplier_value ELSE ss.value END), 0) AS total
+        COALESCE(SUM(CASE WHEN sc.is_multiplier OR sc.is_award THEN ss.value * sc.multiplier_value ELSE ss.value END), 0) AS total
        FROM session_players sp
        LEFT JOIN session_scores ss ON ss.session_player_id = sp.id
        LEFT JOIN score_categories sc ON sc.id = ss.score_category_id

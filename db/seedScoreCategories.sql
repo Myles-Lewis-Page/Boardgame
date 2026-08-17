@@ -25,16 +25,16 @@ WHERE LOWER(g.name) = LOWER('Wingspan')
   AND NOT EXISTS (SELECT 1 FROM score_categories sc WHERE sc.game_id = g.id);
 
 -- ---- Catan ----
-INSERT INTO score_categories (game_id, group_label, label, is_multiplier, multiplier_value, sort_order)
-SELECT g.id, v.group_label, v.label, v.is_multiplier, v.multiplier_value, v.sort_order
+INSERT INTO score_categories (game_id, group_label, label, is_multiplier, multiplier_value, is_award, sort_order)
+SELECT g.id, v.group_label, v.label, v.is_multiplier, v.multiplier_value, v.is_award, v.sort_order
 FROM games g
 JOIN (VALUES
-  ('Settlements & cities', 'Settlements',         true,  1, 0),
-  ('Settlements & cities', 'Cities',              true,  2, 1),
-  ('Bonuses',              'Longest Road',        false, 1, 2),
-  ('Bonuses',              'Largest Army',        false, 1, 3),
-  ('Development cards',    'Victory point cards', true,  1, 4)
-) AS v(group_label, label, is_multiplier, multiplier_value, sort_order)
+  ('Settlements & cities', 'Settlements',         true,  1, false, 0),
+  ('Settlements & cities', 'Cities',              true,  2, false, 1),
+  ('Bonuses',              'Longest Road',        false, 2, true,  2),
+  ('Bonuses',              'Largest Army',        false, 2, true,  3),
+  ('Development cards',    'Victory point cards', true,  1, false, 4)
+) AS v(group_label, label, is_multiplier, multiplier_value, is_award, sort_order)
   ON TRUE
 WHERE LOWER(g.name) = LOWER('Catan')
   AND NOT EXISTS (SELECT 1 FROM score_categories sc WHERE sc.game_id = g.id);

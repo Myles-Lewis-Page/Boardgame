@@ -19,7 +19,9 @@
       <div class="score-cat-info">
         <strong><%= c.label %></strong>
         <span class="hint">
-          <% if (c.is_multiplier) { %>
+          <% if (c.is_award) { %>
+            one player holds this &middot; worth <%= c.multiplier_value %> pt<%= c.multiplier_value == 1 ? '' : 's' %>
+          <% } else if (c.is_multiplier) { %>
             enter a count &times; <%= c.multiplier_value %> pt<%= c.multiplier_value == 1 ? '' : 's' %> each
           <% } else { %>
             enter points directly
@@ -60,14 +62,31 @@
     <label id="multiplier-value-label" class="hidden">Points per item
       <input type="number" name="multiplier_value" step="any" value="1">
     </label>
+    <label class="checkbox-label">
+      <input type="checkbox" name="is_award" id="is-award-check">
+      This is a one-off bonus only one player can hold at a time (like Longest Road)
+    </label>
+    <label id="award-value-label" class="hidden">Points for whoever holds it
+      <input type="number" name="award_value" step="any" value="2">
+    </label>
     <button type="submit" class="btn">+ Add Row</button>
   </form>
 </div>
 
 <script>
-  const checkbox = document.getElementById('is-multiplier-check');
-  const wrap = document.getElementById('multiplier-value-label');
-  checkbox.addEventListener('change', () => wrap.classList.toggle('hidden', !checkbox.checked));
+  const multiplierCheckbox = document.getElementById('is-multiplier-check');
+  const multiplierWrap = document.getElementById('multiplier-value-label');
+  const awardCheckbox = document.getElementById('is-award-check');
+  const awardWrap = document.getElementById('award-value-label');
+
+  multiplierCheckbox.addEventListener('change', () => {
+    if (multiplierCheckbox.checked) { awardCheckbox.checked = false; awardWrap.classList.add('hidden'); }
+    multiplierWrap.classList.toggle('hidden', !multiplierCheckbox.checked);
+  });
+  awardCheckbox.addEventListener('change', () => {
+    if (awardCheckbox.checked) { multiplierCheckbox.checked = false; multiplierWrap.classList.add('hidden'); }
+    awardWrap.classList.toggle('hidden', !awardCheckbox.checked);
+  });
 </script>
 
 <%- include('partials/foot') %>

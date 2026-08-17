@@ -56,19 +56,33 @@
         <td class="score-row-label-col">
           <%= c.label %>
           <% if (c.is_multiplier) { %><span class="hint">&times;<%= c.multiplier_value %></span><% } %>
+          <% if (c.is_award) { %><span class="hint">worth <%= c.multiplier_value %></span><% } %>
         </td>
         <% players.forEach(p => { %>
           <td>
-            <input
-              type="number"
-              step="any"
-              class="score-cell-input"
-              data-player="<%= p.id %>"
-              data-category="<%= c.id %>"
-              data-multiplier="<%= c.is_multiplier ? c.multiplier_value : 1 %>"
-              value="<%= (scoreMap[p.id] && scoreMap[p.id][c.id]) || 0 %>"
-              <%= session.finished_at ? 'disabled' : '' %>
-            >
+            <% if (c.is_award) { %>
+              <input
+                type="radio"
+                class="score-award-radio"
+                name="award-<%= c.id %>"
+                data-category="<%= c.id %>"
+                data-player="<%= p.id %>"
+                data-multiplier="<%= c.multiplier_value %>"
+                <%= (scoreMap[p.id] && scoreMap[p.id][c.id]) ? 'checked' : '' %>
+                <%= session.finished_at ? 'disabled' : '' %>
+              >
+            <% } else { %>
+              <input
+                type="number"
+                step="any"
+                class="score-cell-input"
+                data-player="<%= p.id %>"
+                data-category="<%= c.id %>"
+                data-multiplier="<%= c.is_multiplier ? c.multiplier_value : 1 %>"
+                value="<%= (scoreMap[p.id] && scoreMap[p.id][c.id]) || 0 %>"
+                <%= session.finished_at ? 'disabled' : '' %>
+              >
+            <% } %>
           </td>
         <% }) %>
       </tr>
@@ -82,6 +96,10 @@
   </tbody>
 </table>
 </div>
+
+<% if (!session.finished_at) { %>
+<p class="hint">Tap a "Bonuses" radio again to clear it - or select a different player to hand it over.</p>
+<% } %>
 
 <% if (!session.finished_at) { %>
 <div class="form-card">
