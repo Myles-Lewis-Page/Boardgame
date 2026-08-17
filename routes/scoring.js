@@ -172,6 +172,42 @@ router.get('/sessions/:id', asyncHandler(async (req, res) => {
   res.render('session-scoresheet', data);
 }));
 
+router.get('/sessions/:id/export.csv', asyncHandler(async (req, res) => {
+  const data = await loadSession(req.params.id);
+  if (!data) return res.status(404).send('Session not found');
+  const { session, categories, players, scoreMap } = data;
+
+  function csvEscape(value) {
+    const str = String(value);
+    return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+  }
+
+  const header = ['Category', ...players.map(p => p.player_name)];
+  const lines = [header.map(csvEscape).join(',')];
+
+  let lastGroup = null;
+  categories.forEach(c => {
+    if (c.group_label !== lastGroup) {
+      lines.push([csvEscape(c.group_label || '')].join(','));
+      lastGroup = c.group_label;
+    }
+    const row = [c.label, ...players.map(p => {
+      const raw = (scoreMap[p.id] && scoreMap[p.id][c.id]) || 0;
+      return c.is_multiplier ? raw * parseFloat(c.multiplier_value) : raw;
+    })];
+    lines.push(row.map(csvEscape).join(','));
+  });
+
+  lines.push(['Total', ...players.map(p => p.total)].map(csvEscape).join(','));
+
+  const dateStr = new Date(session.started_at).toISOString().slice(0, 10);
+  const filename = `${session.game_name.replace(/[^a-z0-9]+/gi, '-')}-${dateStr}.csv`;
+
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(lines.join('\n'));
+}));
+
 router.post('/sessions/:id/scores', asyncHandler(async (req, res) => {
   const { session_player_id, score_category_id, value } = req.body;
   const numeric = parseFloat(value);

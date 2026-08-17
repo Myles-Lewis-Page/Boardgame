@@ -5,6 +5,7 @@
 <div class="game-header">
   <h1><%= session.game_name %><% if (session.finished_at) { %> <span class="badge badge-wishlist">finished</span><% } %></h1>
   <div class="game-actions">
+    <a href="/sessions/<%= session.id %>/export.csv" class="btn btn-small btn-secondary">⬇️ Export CSV</a>
     <% if (!session.finished_at) { %>
       <form method="POST" action="/sessions/<%= session.id %>/finish" onsubmit="return confirm('Finish the game? You can still reopen it later if you need to.')">
         <button type="submit" class="btn btn-small">🏁 Finish Game</button>

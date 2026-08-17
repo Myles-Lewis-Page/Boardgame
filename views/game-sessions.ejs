@@ -14,18 +14,21 @@
 <% } else { %>
   <div class="session-history-list">
     <% sessions.forEach(s => { %>
-      <a href="/sessions/<%= s.id %>" class="session-history-card">
-        <div>
-          <strong><%= new Date(s.started_at).toLocaleDateString() %></strong>
-          <% if (!s.finished_at) { %><span class="badge badge-wishlist">in progress</span><% } %>
-          <div class="hint">
-            <% s.players.forEach((p, i) => { %><%= p.player_name %>: <%= p.total %><%= i < s.players.length - 1 ? ' &middot; ' : '' %><% }) %>
+      <div class="session-history-row">
+        <a href="/sessions/<%= s.id %>" class="session-history-card">
+          <div>
+            <strong><%= new Date(s.started_at).toLocaleDateString() %></strong>
+            <% if (!s.finished_at) { %><span class="badge badge-wishlist">in progress</span><% } %>
+            <div class="hint">
+              <% s.players.forEach((p, i) => { %><%= p.player_name %>: <%= p.total %><%= i < s.players.length - 1 ? ' &middot; ' : '' %><% }) %>
+            </div>
           </div>
-        </div>
-        <% if (s.finished_at && s.winner) { %>
-          <div class="session-history-winner">🏆 <%= s.winner.player_name %></div>
-        <% } %>
-      </a>
+          <% if (s.finished_at && s.winner) { %>
+            <div class="session-history-winner">🏆 <%= s.winner.player_name %></div>
+          <% } %>
+        </a>
+        <a href="/sessions/<%= s.id %>/export.csv" class="btn btn-tiny btn-secondary">⬇️ CSV</a>
+      </div>
     <% }) %>
   </div>
 <% } %>
