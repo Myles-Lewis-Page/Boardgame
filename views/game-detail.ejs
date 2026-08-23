@@ -110,10 +110,11 @@
   <button class="tab-btn" data-tab="expansions">Expansions (<%= expansions.length %>)</button>
 </div>
 
-<% if (expansions.length > 0) { %>
+<% const ownedSources = sources.filter(src => src.owned); %>
+<% if (ownedSources.length > 1) { %>
 <div class="playing-with-bar">
   <span class="playing-with-label">Playing with:</span>
-  <% sources.forEach(src => { %>
+  <% ownedSources.forEach(src => { %>
     <label class="source-chip">
       <input type="checkbox" class="source-filter-checkbox" data-source="<%= src.key %>" checked>
       <%= src.label %>

@@ -46,11 +46,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // source (base game vs. a specific expansion). Combines with search so a
   // section only shows if it passes both filters. ----
   const filterCheckboxes = document.querySelectorAll('.source-filter-checkbox');
+  const filterableSources = new Set();
+  filterCheckboxes.forEach(cb => filterableSources.add(cb.dataset.source));
 
   function getVisibleSources() {
     const visible = new Set();
     filterCheckboxes.forEach(cb => { if (cb.checked) visible.add(cb.dataset.source); });
     return visible;
+  }
+
+  // A source with no checkbox at all (e.g. a wishlist expansion, which
+  // isn't offered in the "Playing with" bar) is never hidden by this
+  // filter - only sources that actually have a toggle can be turned off.
+  function sourceVisible(visibleSources, sourceKey) {
+    if (!visibleSources) return true;
+    if (!filterableSources.has(sourceKey)) return true;
+    return visibleSources.has(sourceKey);
   }
 
   function applyFilters() {
@@ -59,14 +70,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Rule section cards (Rules tab)
     document.querySelectorAll('.rule-card.searchable').forEach(card => {
-      const sourceOk = !visibleSources || visibleSources.has(card.dataset.source);
+      const sourceOk = sourceVisible(visibleSources, card.dataset.source);
       const searchOk = sectionMatchesSearch(card, query);
       card.classList.toggle('hidden', !(sourceOk && searchOk));
     });
 
     // House rule cards (House Rules tab) - source filter only, no search box there
     document.querySelectorAll('#tab-house .rule-card[data-source]').forEach(card => {
-      const sourceOk = !visibleSources || visibleSources.has(card.dataset.source);
+      const sourceOk = sourceVisible(visibleSources, card.dataset.source);
       card.classList.toggle('hidden', !sourceOk);
     });
 
@@ -81,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
           el.classList.contains('rule-category-block') ||
           el.classList.contains('setup-option-card')
         ) {
-          el.classList.toggle('hidden', !visibleSources.has(el.dataset.source));
+          el.classList.toggle('hidden', !sourceVisible(visibleSources, el.dataset.source));
         }
       });
     }

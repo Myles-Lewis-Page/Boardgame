@@ -122,11 +122,14 @@ router.get('/:id', asyncHandler(async (req, res) => {
   );
 
   // "sources" is the ordered list of things rules can belong to: the base
-  // game first, then each owned expansion. Used to build filter chips, the
-  // grouped table of contents, and the "add rules for..." picker.
+  // game first, then every expansion (owned or wishlist - wishlist ones
+  // can still have rules pasted in ahead of buying them). Each entry
+  // carries `owned` so templates can filter down to owned-only where that
+  // matters, e.g. the "Playing with" bar shouldn't offer to toggle rules
+  // for something you don't have yet.
   const sources = [
-    { key: 'base', label: game.name, isBase: true, expansionId: null },
-    ...expansions.map(exp => ({ key: `exp-${exp.id}`, label: exp.name, isBase: false, expansionId: exp.id }))
+    { key: 'base', label: game.name, isBase: true, expansionId: null, owned: true },
+    ...expansions.map(exp => ({ key: `exp-${exp.id}`, label: exp.name, isBase: false, expansionId: exp.id, owned: exp.owned }))
   ];
 
   const baseSections = allSections.filter(s => s.expansion_id === null);
