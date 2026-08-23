@@ -104,13 +104,17 @@
 </div>
 <% } %>
 
+<% const ownedSources = sources.filter(src => src.owned);
+   const ownedExpansionIds = new Set(ownedSources.filter(s => !s.isBase).map(s => s.expansionId));
+   const visibleSections = allSections.filter(s => s.expansion_id === null || ownedExpansionIds.has(s.expansion_id));
+   const visibleHouseRules = allHouseRules.filter(h => h.expansion_id === null || ownedExpansionIds.has(h.expansion_id));
+%>
 <div class="tabs">
-  <button class="tab-btn active" data-tab="rules">Rules (<%= allSections.length %>)</button>
-  <button class="tab-btn" data-tab="house">House Rules (<%= allHouseRules.filter(h => h.is_active).length %>/<%= allHouseRules.length %>)</button>
+  <button class="tab-btn active" data-tab="rules">Rules (<%= visibleSections.length %>)</button>
+  <button class="tab-btn" data-tab="house">House Rules (<%= visibleHouseRules.filter(h => h.is_active).length %>/<%= visibleHouseRules.length %>)</button>
   <button class="tab-btn" data-tab="expansions">Expansions (<%= expansions.length %>)</button>
 </div>
 
-<% const ownedSources = sources.filter(src => src.owned); %>
 <% if (ownedSources.length > 1) { %>
 <div class="playing-with-bar">
   <span class="playing-with-label">Playing with:</span>
@@ -153,7 +157,7 @@
   </div>
   <% } %>
 
-  <% const anyActiveExtraHouseRules = allHouseRules.some(h => h.is_active && !h.base_section_id); %>
+  <% const anyActiveExtraHouseRules = visibleHouseRules.some(h => h.is_active && !h.base_section_id); %>
 
   <% if (isAdmin || allSetupOptions.length > 0) { %>
   <div class="setup-options-block">
@@ -213,8 +217,8 @@
   </div>
   <% } %>
 
-  <% if (allSections.length === 0 && !anyActiveExtraHouseRules) { %>
-    <p class="empty">No rules added yet. <% if (isAdmin) { %>Paste the rulebook text above to get started.<% } %></p>
+  <% if (visibleSections.length === 0 && !anyActiveExtraHouseRules) { %>
+    <p class="empty">No rules added yet.<% if (isAdmin) { %> Paste the rulebook text above to get started.<% } %></p>
   <% } else { %>
 
   <input type="search" id="rule-search" placeholder="Search all rules (base game + expansions)..." class="rule-search" aria-label="Search rules">
@@ -364,7 +368,7 @@
   </div>
   <% } %>
 
-  <% if (allHouseRules.length === 0) { %>
+  <% if (visibleHouseRules.length === 0) { %>
     <p class="empty">No house rules yet.</p>
   <% } %>
 
