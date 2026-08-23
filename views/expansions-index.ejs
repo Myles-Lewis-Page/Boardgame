@@ -1,0 +1,27 @@
+<%- include('partials/head', { title }) %>
+
+<h1><%= title %></h1>
+
+<% if (expansions.length === 0) { %>
+  <p class="empty"><%= emptyMessage %></p>
+<% } else { %>
+  <div class="game-grid">
+    <% expansions.forEach(exp => { %>
+      <a class="game-card" href="/games/<%= exp.game_id %>#tab-expansions">
+        <% if (exp.cover_image_url) { %>
+          <img class="box-art-thumb" src="<%= exp.cover_image_url %>" alt="<%= exp.name %> box art">
+        <% } else { %>
+          <div class="box-art-thumb box-art-placeholder"></div>
+        <% } %>
+        <h2><%= exp.name %></h2>
+        <p class="meta">
+          for <%= exp.game_name %>
+          <% if (exp.min_players || exp.max_players) { %> &middot; <%= exp.min_players || '?' %>-<%= exp.max_players || '?' %> players<% } %>
+          <% if (exp.play_time_minutes) { %> &middot; <%= exp.play_time_minutes %> min<% } %>
+        </p>
+      </a>
+    <% }) %>
+  </div>
+<% } %>
+
+<%- include('partials/foot') %>

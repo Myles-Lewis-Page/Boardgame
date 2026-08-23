@@ -3,6 +3,30 @@ const router = express.Router();
 const pool = require('../db');
 const { requireAuth } = require('../middleware/auth');
 
+// All owned expansions across every game, one flat page - the expansion
+// equivalent of the main /games list.
+router.get('/expansions', async (req, res) => {
+  const { rows: expansions } = await pool.query(
+    `SELECT e.*, g.name AS game_name
+     FROM expansions e JOIN games g ON g.id = e.game_id
+     WHERE e.owned = true
+     ORDER BY g.name ASC, e.name ASC`
+  );
+  res.render('expansions-index', { expansions, title: 'My Expansions', emptyMessage: 'No expansions added yet.' });
+});
+
+// All wishlist (owned = false) expansions across every game - the
+// expansion equivalent of /wishlist.
+router.get('/expansions/wishlist', async (req, res) => {
+  const { rows: expansions } = await pool.query(
+    `SELECT e.*, g.name AS game_name
+     FROM expansions e JOIN games g ON g.id = e.game_id
+     WHERE e.owned = false
+     ORDER BY g.name ASC, e.name ASC`
+  );
+  res.render('expansions-index', { expansions, title: 'Wishlist Expansions', emptyMessage: 'Nothing on the expansion wishlist yet.' });
+});
+
 // Kept as a fallback for any old bookmarked/shared links to a standalone
 // expansion page - expansion management now lives inline on the game page's
 // Expansions tab, so this just forwards there.

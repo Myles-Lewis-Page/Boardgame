@@ -8,11 +8,13 @@
 </head>
 <body>
   <header class="topbar">
-    <a href="/games" class="brand">🎲 Board Game Rules</a>
+    <a href="/games" class="brand">Board Game Rules</a>
     <div class="topbar-actions">
-      <a href="/wishlist" class="btn btn-small btn-secondary">Wishlist</a>
-      <a href="/randomizer" class="btn btn-small btn-secondary">🎲 What Should We Play?</a>
-      <a href="/categories" class="btn btn-small btn-secondary">Categories</a>
+      <a href="/games" class="btn btn-small btn-secondary">My Games</a>
+      <a href="/expansions" class="btn btn-small btn-secondary">My Expansions</a>
+      <a href="/wishlist" class="btn btn-small btn-secondary">Wishlist Games</a>
+      <a href="/expansions/wishlist" class="btn btn-small btn-secondary">Wishlist Expansions</a>
+      <a href="/randomizer" class="btn btn-small btn-secondary">What Should We Play?</a>
       <% if (locals.isAdmin) { %>
         <a href="/games/import" class="btn btn-small btn-secondary">Import</a>
         <a href="/games/new" class="btn btn-small">+ Add Game</a>
@@ -20,7 +22,7 @@
           <button type="submit" class="btn btn-small btn-secondary">Log Out</button>
         </form>
       <% } else { %>
-        <a href="/login" class="btn btn-small btn-secondary">Log In to Edit</a>
+        <a href="/login" class="btn btn-small btn-secondary">Login</a>
       <% } %>
     </div>
   </header>
