@@ -8,7 +8,7 @@
       <img class="box-art-thumb expansion-thumb" src="<%= exp.cover_image_url %>" alt="<%= exp.name %> box art">
     <% } %>
     <div>
-      <h3><%= exp.name %> <% if (!exp.owned) { %><span class="badge badge-wishlist">wishlist</span><% } %></h3>
+      <h3><a href="/games/<%= game.id %>/expansions/<%= exp.id %>"><%= exp.name %></a> <% if (!exp.owned) { %><span class="badge badge-wishlist">wishlist</span><% } %></h3>
       <p class="meta">
         <% if (exp.min_players || exp.max_players) { %><%= exp.min_players || '?' %>-<%= exp.max_players || '?' %> players<% } %>
         <% if (exp.play_time_minutes) { %> &middot; <%= exp.play_time_minutes %> min<% } %>

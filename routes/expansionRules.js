@@ -52,7 +52,7 @@ router.post('/games/:gameId/expansions/:expId/base-rules/save', requireAuth, asy
     client.release();
   }
 
-  res.redirect(`/games/${gameId}#tab-rules`);
+  res.redirect(`/games/${gameId}/expansions/${expId}`);
 }));
 
 router.post('/games/:gameId/expansions/:expId/base-rules', requireAuth, asyncHandler(async (req, res) => {
@@ -82,7 +82,7 @@ router.post('/games/:gameId/expansions/:expId/base-rules', requireAuth, asyncHan
     client.release();
   }
 
-  res.redirect(`/games/${gameId}#tab-rules`);
+  res.redirect(`/games/${gameId}/expansions/${expId}`);
 }));
 
 router.post('/expansion-base-rules/:id/edit', requireAuth, asyncHandler(async (req, res) => {
@@ -110,19 +110,21 @@ router.post('/expansion-base-rules/:id/edit', requireAuth, asyncHandler(async (r
     client.release();
   }
 
-  res.redirect(`/games/${gameId}#tab-rules`);
+  res.redirect(`/games/${gameId}/expansions/${expId}`);
 }));
 
 router.post('/expansion-base-rules/:id/uncategorize', requireAuth, asyncHandler(async (req, res) => {
   const { gameId } = req.body;
-  await pool.query('UPDATE base_rule_sections SET rule_category_id = NULL WHERE id = $1', [req.params.id]);
-  res.redirect(`/games/${gameId}#tab-rules`);
+  const { rows } = await pool.query('UPDATE base_rule_sections SET rule_category_id = NULL WHERE id = $1 RETURNING expansion_id', [req.params.id]);
+  const expId = rows[0] && rows[0].expansion_id;
+  res.redirect(`/games/${gameId}/expansions/${expId}`);
 }));
 
 router.post('/expansion-base-rules/:id/delete', requireAuth, asyncHandler(async (req, res) => {
   const { gameId } = req.body;
-  await pool.query('DELETE FROM base_rule_sections WHERE id = $1', [req.params.id]);
-  res.redirect(`/games/${gameId}#tab-rules`);
+  const { rows } = await pool.query('DELETE FROM base_rule_sections WHERE id = $1 RETURNING expansion_id', [req.params.id]);
+  const expId = rows[0] && rows[0].expansion_id;
+  res.redirect(`/games/${gameId}/expansions/${expId}`);
 }));
 
 // ---- House rules for an expansion ----
@@ -158,7 +160,7 @@ router.post('/games/:gameId/expansions/:expId/house-rules', requireAuth, asyncHa
     client.release();
   }
 
-  res.redirect(`/games/${gameId}#tab-rules`);
+  res.redirect(`/games/${gameId}/expansions/${expId}`);
 }));
 
 router.post('/expansion-house-rules/:id/edit', requireAuth, asyncHandler(async (req, res) => {
@@ -186,19 +188,21 @@ router.post('/expansion-house-rules/:id/edit', requireAuth, asyncHandler(async (
     client.release();
   }
 
-  res.redirect(`/games/${gameId}#tab-rules`);
+  res.redirect(`/games/${gameId}/expansions/${expId}`);
 }));
 
 router.post('/expansion-house-rules/:id/toggle', requireAuth, asyncHandler(async (req, res) => {
   const { gameId } = req.body;
-  await pool.query('UPDATE house_rules SET is_active = NOT is_active WHERE id = $1', [req.params.id]);
-  res.redirect(`/games/${gameId}#tab-rules`);
+  const { rows } = await pool.query('UPDATE house_rules SET is_active = NOT is_active WHERE id = $1 RETURNING expansion_id', [req.params.id]);
+  const expId = rows[0] && rows[0].expansion_id;
+  res.redirect(`/games/${gameId}/expansions/${expId}`);
 }));
 
 router.post('/expansion-house-rules/:id/delete', requireAuth, asyncHandler(async (req, res) => {
   const { gameId } = req.body;
-  await pool.query('DELETE FROM house_rules WHERE id = $1', [req.params.id]);
-  res.redirect(`/games/${gameId}#tab-rules`);
+  const { rows } = await pool.query('DELETE FROM house_rules WHERE id = $1 RETURNING expansion_id', [req.params.id]);
+  const expId = rows[0] && rows[0].expansion_id;
+  res.redirect(`/games/${gameId}/expansions/${expId}`);
 }));
 
 // ---- Setup options for an expansion ----
@@ -214,19 +218,21 @@ router.post('/games/:gameId/expansions/:expId/setup-options', requireAuth, async
     'INSERT INTO setup_options (game_id, expansion_id, title, body, sort_order) VALUES ($1, $2, $3, $4, $5)',
     [gameId, expId, title, body, rows[0].next_order]
   );
-  res.redirect(`/games/${gameId}#tab-rules`);
+  res.redirect(`/games/${gameId}/expansions/${expId}`);
 }));
 
 router.post('/expansion-setup-options/:id/edit', requireAuth, asyncHandler(async (req, res) => {
   const { title, body, gameId } = req.body;
-  await pool.query('UPDATE setup_options SET title=$1, body=$2 WHERE id=$3', [title, body, req.params.id]);
-  res.redirect(`/games/${gameId}#tab-rules`);
+  const { rows } = await pool.query('UPDATE setup_options SET title=$1, body=$2 WHERE id=$3 RETURNING expansion_id', [title, body, req.params.id]);
+  const expId = rows[0] && rows[0].expansion_id;
+  res.redirect(`/games/${gameId}/expansions/${expId}`);
 }));
 
 router.post('/expansion-setup-options/:id/delete', requireAuth, asyncHandler(async (req, res) => {
   const { gameId } = req.body;
-  await pool.query('DELETE FROM setup_options WHERE id = $1', [req.params.id]);
-  res.redirect(`/games/${gameId}#tab-rules`);
+  const { rows } = await pool.query('DELETE FROM setup_options WHERE id = $1 RETURNING expansion_id', [req.params.id]);
+  const expId = rows[0] && rows[0].expansion_id;
+  res.redirect(`/games/${gameId}/expansions/${expId}`);
 }));
 
 module.exports = router;

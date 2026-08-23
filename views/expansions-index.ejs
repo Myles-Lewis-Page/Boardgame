@@ -7,7 +7,7 @@
 <% } else { %>
   <div class="game-grid">
     <% expansions.forEach(exp => { %>
-      <a class="game-card" href="/games/<%= exp.game_id %>#tab-expansions">
+      <a class="game-card" href="/games/<%= exp.game_id %>/expansions/<%= exp.id %>">
         <% if (exp.cover_image_url) { %>
           <img class="box-art-thumb" src="<%= exp.cover_image_url %>" alt="<%= exp.name %> box art">
         <% } else { %>

@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { asyncHandler } = require('../middleware/asyncHandler');
+const { buildTree: buildRuleCategoryTree, pathForRuleCategoryId, setupFirstWinningLastCompare } = require('../db/ruleCategoryTree');
 
 // All owned expansions across every game, one flat page - the expansion
 // equivalent of the main /games list.
@@ -27,12 +29,68 @@ router.get('/expansions/wishlist', async (req, res) => {
   res.render('expansions-index', { expansions, title: 'Wishlist Expansions', emptyMessage: 'Nothing on the expansion wishlist yet.' });
 });
 
-// Kept as a fallback for any old bookmarked/shared links to a standalone
-// expansion page - expansion management now lives inline on the game page's
-// Expansions tab, so this just forwards there.
-router.get('/games/:gameId/expansions/:expId', (req, res) => {
-  res.redirect(`/games/${req.params.gameId}#tab-expansions`);
-});
+// Full rules view for a single expansion - works the same whether the
+// expansion is owned or on the wishlist, since there's only ever one
+// source on this page (unlike the merged game page, which filters wishlist
+// expansions out of the combined Rules tab).
+router.get('/games/:gameId/expansions/:expId', asyncHandler(async (req, res) => {
+  const { gameId, expId } = req.params;
+  const { rows: expRows } = await pool.query('SELECT * FROM expansions WHERE id = $1 AND game_id = $2', [expId, gameId]);
+  if (!expRows.length) return res.status(404).send('Expansion not found');
+  const expansion = expRows[0];
+
+  const { rows: gameRows } = await pool.query('SELECT * FROM games WHERE id = $1', [gameId]);
+  if (!gameRows.length) return res.status(404).send('Game not found');
+  const game = gameRows[0];
+
+  const { rows: sections } = await pool.query(
+    'SELECT * FROM base_rule_sections WHERE expansion_id = $1 ORDER BY sort_order ASC, id ASC',
+    [expId]
+  );
+  const { rows: houseRules } = await pool.query(
+    'SELECT * FROM house_rules WHERE expansion_id = $1 ORDER BY sort_order ASC, id ASC',
+    [expId]
+  );
+  const { rows: ruleCategories } = await pool.query(
+    'SELECT * FROM rule_categories WHERE expansion_id = $1 ORDER BY depth ASC, name ASC',
+    [expId]
+  );
+  const { rows: setupOptions } = await pool.query(
+    'SELECT * FROM setup_options WHERE expansion_id = $1 ORDER BY sort_order ASC, id ASC',
+    [expId]
+  );
+
+  const activeHouseRules = houseRules.filter(h => h.is_active);
+  const extraHouseRules = activeHouseRules.filter(h => !h.base_section_id);
+  const overridesBySection = new Map(
+    activeHouseRules.filter(h => h.base_section_id).map(h => [h.base_section_id, h])
+  );
+
+  const catTree = buildRuleCategoryTree(ruleCategories);
+  const sectionsByCategory = new Map();
+  sections.forEach(s => {
+    if (!s.rule_category_id) return;
+    if (!sectionsByCategory.has(s.rule_category_id)) sectionsByCategory.set(s.rule_category_id, []);
+    sectionsByCategory.get(s.rule_category_id).push(s);
+  });
+  const houseRulesByCategory = new Map();
+  extraHouseRules.forEach(h => {
+    if (!h.rule_category_id) return;
+    if (!houseRulesByCategory.has(h.rule_category_id)) houseRulesByCategory.set(h.rule_category_id, []);
+    houseRulesByCategory.get(h.rule_category_id).push(h);
+  });
+  const uncategorizedItems = [
+    ...sections.filter(s => !s.rule_category_id).map(s => ({ type: 'section', title: s.title, s })),
+    ...extraHouseRules.filter(h => !h.rule_category_id).map(h => ({ type: 'houserule', title: h.title, h })),
+  ].sort((a, b) => setupFirstWinningLastCompare(a.title, b.title));
+
+  res.render('expansion-detail', {
+    game, expansion, sections, houseRules, ruleCategories, setupOptions,
+    catTree, sectionsByCategory, houseRulesByCategory, overridesBySection, uncategorizedItems,
+    activeHouseRules, extraHouseRules,
+    pathForRuleCategoryId
+  });
+}));
 
 router.get('/games/:gameId/expansions/new', (req, res) => {
   res.redirect(`/games/${req.params.gameId}#tab-expansions`);
