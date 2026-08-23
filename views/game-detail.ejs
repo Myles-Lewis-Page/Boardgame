@@ -180,7 +180,7 @@
     <% if (allSetupOptions.length === 0) { %>
       <p class="empty">No alternate setups added yet.<% if (isAdmin) { %> Use this for games that can be set up multiple ways, like a curated Kingdom set for Dominion or a board layout variant for Catan.<% } %></p>
     <% } else { %>
-      <% sources.forEach(src => {
+      <% ownedSources.forEach(src => {
         const optsForSrc = allSetupOptions.filter(o => (src.isBase ? o.expansion_id === null : o.expansion_id === src.expansionId));
         if (optsForSrc.length === 0) return;
       %>
@@ -222,7 +222,7 @@
   <div class="rules-layout">
     <nav class="toc" aria-label="Rule sections">
       <div class="toc-label">Sections</div>
-      <% sources.forEach(src => {
+      <% ownedSources.forEach(src => {
         const sectionsForSrc = allSections.filter(s => (src.isBase ? s.expansion_id === null : s.expansion_id === src.expansionId));
         const activeHouseRulesForSrc = allHouseRules.filter(h => h.is_active && (src.isBase ? h.expansion_id === null : h.expansion_id === src.expansionId));
         const extraHouseRules = activeHouseRulesForSrc.filter(h => !h.base_section_id);
@@ -247,7 +247,7 @@
           ...extraHouseRules.filter(h => !h.rule_category_id).map(h => ({ type: 'houserule', title: h.title, h })),
         ].sort((a, b) => setupFirstWinningLastCompare(a.title, b.title));
       %>
-        <% if (expansions.length > 0) { %><div class="toc-subheader" data-source="<%= src.key %>"><%= src.label %></div><% } %>
+        <% if (ownedSources.length > 1) { %><div class="toc-subheader" data-source="<%= src.key %>"><%= src.label %></div><% } %>
         <% uncategorizedItems.forEach(item => { %>
           <% if (item.type === 'section') { %>
             <a href="#section-<%= item.s.id %>" class="toc-link" data-source="<%= src.key %>" data-scroll><%= item.title %></a>
@@ -265,7 +265,7 @@
     </nav>
 
     <div class="rule-content">
-      <% sources.forEach(src => {
+      <% ownedSources.forEach(src => {
         const sectionsForSrc = allSections.filter(s => (src.isBase ? s.expansion_id === null : s.expansion_id === src.expansionId));
         const activeHouseRulesForSrc = allHouseRules.filter(h => h.is_active && (src.isBase ? h.expansion_id === null : h.expansion_id === src.expansionId));
         const extraHouseRules = activeHouseRulesForSrc.filter(h => !h.base_section_id);
@@ -293,7 +293,7 @@
           ...extraHouseRules.filter(h => !h.rule_category_id).map(h => ({ type: 'houserule', title: h.title, h })),
         ].sort((a, b) => setupFirstWinningLastCompare(a.title, b.title));
       %>
-        <% if (expansions.length > 0) { %><h2 class="source-group-header" data-source="<%= src.key %>"><%= src.label %></h2><% } %>
+        <% if (ownedSources.length > 1) { %><h2 class="source-group-header" data-source="<%= src.key %>"><%= src.label %></h2><% } %>
         <% if (isAdmin && catRowsForSrc.length > 0) { %>
           <datalist id="rule-cat-suggestions-<%= src.key %>">
             <% catRowsForSrc.forEach(c => { %>
@@ -368,11 +368,11 @@
     <p class="empty">No house rules yet.</p>
   <% } %>
 
-  <% sources.forEach(src => {
+  <% ownedSources.forEach(src => {
     const rulesForSrc = allHouseRules.filter(h => (src.isBase ? h.expansion_id === null : h.expansion_id === src.expansionId));
     if (rulesForSrc.length === 0) return;
   %>
-    <% if (expansions.length > 0) { %><h2 class="source-group-header" data-source="<%= src.key %>"><%= src.label %></h2><% } %>
+    <% if (ownedSources.length > 1) { %><h2 class="source-group-header" data-source="<%= src.key %>"><%= src.label %></h2><% } %>
     <% rulesForSrc.forEach(h => { %>
       <details class="rule-card <%= h.is_active ? '' : 'inactive' %>" data-source="<%= src.key %>">
         <summary>
