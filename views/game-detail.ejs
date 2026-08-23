@@ -463,60 +463,49 @@
 
   <% if (expansions.length === 0) { %>
     <p class="empty">No expansions added yet.<% if (isAdmin) { %> Add one above, then paste its rulebook right from the Rules tab.<% } %></p>
-  <% } else { %>
-    <% expansions.forEach(exp => {
-      const sectionCount = allSections.filter(s => s.expansion_id === exp.id).length;
-      const houseRuleCount = allHouseRules.filter(h => h.expansion_id === exp.id).length;
-    %>
-      <div class="rule-card expansion-manage-card">
-        <div class="expansion-manage-header">
-          <% if (exp.cover_image_url) { %>
-            <img class="box-art-thumb expansion-thumb" src="<%= exp.cover_image_url %>" alt="<%= exp.name %> box art">
-          <% } %>
-          <div>
-            <h3><%= exp.name %> <% if (!exp.owned) { %><span class="badge badge-wishlist">wishlist</span><% } %></h3>
-            <p class="meta">
-              <% if (exp.min_players || exp.max_players) { %><%= exp.min_players || '?' %>-<%= exp.max_players || '?' %> players<% } %>
-              <% if (exp.play_time_minutes) { %> &middot; <%= exp.play_time_minutes %> min<% } %>
-              &middot; <%= sectionCount %> rule section<%= sectionCount === 1 ? '' : 's' %>
-              &middot; <%= houseRuleCount %> house rule<%= houseRuleCount === 1 ? '' : 's' %>
-            </p>
-            <% if (exp.notes) { %><p class="notes"><%= exp.notes %></p><% } %>
-          </div>
-        </div>
-        <% if (isAdmin) { %>
-        <div class="rule-card-actions">
-          <a href="/games/<%= game.id %>/expansions/<%= exp.id %>/base-rules/paste" class="btn btn-tiny">Paste Rulebook</a>
-          <button class="btn btn-tiny" onclick="this.closest('.expansion-manage-card').querySelector('.edit-form').classList.toggle('hidden')">Edit Info</button>
-          <% if (!exp.owned) { %>
-          <form method="POST" action="/expansions/<%= exp.id %>/mark-owned" class="inline-form">
-            <input type="hidden" name="gameId" value="<%= game.id %>">
-            <button type="submit" class="btn btn-tiny">Mark Owned</button>
-          </form>
-          <% } %>
-          <form method="POST" action="/expansions/<%= exp.id %>/delete" onsubmit="return confirm('Delete this expansion and all its rules?')">
-            <input type="hidden" name="gameId" value="<%= game.id %>">
-            <button type="submit" class="btn btn-tiny btn-danger">Delete</button>
-          </form>
-        </div>
-        <form class="edit-form hidden" method="POST" action="/expansions/<%= exp.id %>/edit">
-          <input type="hidden" name="gameId" value="<%= game.id %>">
-          <label>Name<input type="text" name="name" value="<%= exp.name %>" required></label>
-          <div class="row">
-            <label>Min players<input type="number" name="min_players" value="<%= exp.min_players || '' %>"></label>
-            <label>Max players<input type="number" name="max_players" value="<%= exp.max_players || '' %>"></label>
-          </div>
-          <label>Play time (minutes)<input type="number" name="play_time_minutes" value="<%= exp.play_time_minutes || '' %>"></label>
-          <label>Box art URL<input type="url" name="cover_image_url" value="<%= exp.cover_image_url || '' %>"></label>
-          <label>Notes<textarea name="notes" rows="3"><%= exp.notes || '' %></textarea></label>
-          <label class="checkbox-label"><input type="checkbox" name="owned" <%= exp.owned ? 'checked' : '' %>> Owned</label>
-          <button type="submit" class="btn btn-tiny">Save</button>
-        </form>
-        <% } %>
-      </div>
-    <% }) %>
+  <% } else {
+    const ownedExpansions = expansions.filter(e => e.owned);
+    const wishlistExpansions = expansions.filter(e => !e.owned);
+  %>
+    <div class="sub-tabs">
+      <button class="sub-tab-btn active" data-subtab="owned-expansions">Owned (<%= ownedExpansions.length %>)</button>
+      <button class="sub-tab-btn" data-subtab="wishlist-expansions">Wishlist (<%= wishlistExpansions.length %>)</button>
+    </div>
+
+    <div class="sub-tab-panel" id="subtab-owned-expansions">
+      <% if (ownedExpansions.length === 0) { %>
+        <p class="empty">No owned expansions yet.</p>
+      <% } else { %>
+        <% ownedExpansions.forEach(exp => { %>
+          <%- include('partials/expansion-manage-card', { exp, game, allSections, allHouseRules, isAdmin }) %>
+        <% }) %>
+      <% } %>
+    </div>
+
+    <div class="sub-tab-panel hidden" id="subtab-wishlist-expansions">
+      <% if (wishlistExpansions.length === 0) { %>
+        <p class="empty">Nothing on the expansion wishlist for this game.</p>
+      <% } else { %>
+        <% wishlistExpansions.forEach(exp => { %>
+          <%- include('partials/expansion-manage-card', { exp, game, allSections, allHouseRules, isAdmin }) %>
+        <% }) %>
+      <% } %>
+    </div>
   <% } %>
 </div>
+
+<script>
+  document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const group = btn.parentElement;
+      group.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('#tab-expansions .sub-tab-panel').forEach(p => p.classList.add('hidden'));
+      const target = document.getElementById('subtab-' + btn.dataset.subtab);
+      if (target) target.classList.remove('hidden');
+    });
+  });
+</script>
 
 <script src="/app.js"></script>
 
