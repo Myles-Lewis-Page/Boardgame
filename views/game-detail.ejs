@@ -455,6 +455,7 @@
       <label>Play time (minutes)<input type="number" name="play_time_minutes" min="1"></label>
       <label>Box art URL<input type="url" name="cover_image_url" placeholder="https://..."></label>
       <label>Notes<textarea name="notes" rows="3"></textarea></label>
+      <label class="checkbox-label"><input type="checkbox" name="owned" checked> Owned (uncheck to add to the wishlist instead)</label>
       <button type="submit" class="btn">Add Expansion</button>
     </form>
   </div>
@@ -473,7 +474,7 @@
             <img class="box-art-thumb expansion-thumb" src="<%= exp.cover_image_url %>" alt="<%= exp.name %> box art">
           <% } %>
           <div>
-            <h3><%= exp.name %></h3>
+            <h3><%= exp.name %> <% if (!exp.owned) { %><span class="badge badge-wishlist">wishlist</span><% } %></h3>
             <p class="meta">
               <% if (exp.min_players || exp.max_players) { %><%= exp.min_players || '?' %>-<%= exp.max_players || '?' %> players<% } %>
               <% if (exp.play_time_minutes) { %> &middot; <%= exp.play_time_minutes %> min<% } %>
@@ -487,6 +488,12 @@
         <div class="rule-card-actions">
           <a href="/games/<%= game.id %>/expansions/<%= exp.id %>/base-rules/paste" class="btn btn-tiny">Paste Rulebook</a>
           <button class="btn btn-tiny" onclick="this.closest('.expansion-manage-card').querySelector('.edit-form').classList.toggle('hidden')">Edit Info</button>
+          <% if (!exp.owned) { %>
+          <form method="POST" action="/expansions/<%= exp.id %>/mark-owned" class="inline-form">
+            <input type="hidden" name="gameId" value="<%= game.id %>">
+            <button type="submit" class="btn btn-tiny">Mark Owned</button>
+          </form>
+          <% } %>
           <form method="POST" action="/expansions/<%= exp.id %>/delete" onsubmit="return confirm('Delete this expansion and all its rules?')">
             <input type="hidden" name="gameId" value="<%= game.id %>">
             <button type="submit" class="btn btn-tiny btn-danger">Delete</button>
@@ -502,6 +509,7 @@
           <label>Play time (minutes)<input type="number" name="play_time_minutes" value="<%= exp.play_time_minutes || '' %>"></label>
           <label>Box art URL<input type="url" name="cover_image_url" value="<%= exp.cover_image_url || '' %>"></label>
           <label>Notes<textarea name="notes" rows="3"><%= exp.notes || '' %></textarea></label>
+          <label class="checkbox-label"><input type="checkbox" name="owned" <%= exp.owned ? 'checked' : '' %>> Owned</label>
           <button type="submit" class="btn btn-tiny">Save</button>
         </form>
         <% } %>

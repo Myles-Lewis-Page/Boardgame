@@ -50,9 +50,14 @@ CREATE TABLE IF NOT EXISTS expansions (
   play_time_minutes INTEGER,
   cover_image_url TEXT,
   notes TEXT,
+  owned BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMP DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_expansions_game ON expansions(game_id);
+-- Lets an expansion sit on the wishlist (owned = false) the same way a game
+-- can - existing rows default to true so nothing already in your library
+-- gets silently moved to the wishlist by this migration.
+ALTER TABLE expansions ADD COLUMN IF NOT EXISTS owned BOOLEAN NOT NULL DEFAULT true;
 
 -- Base rules: sections parsed/entered from the official rulebook.
 -- expansion_id is NULL for the base game's own rules, or set when the

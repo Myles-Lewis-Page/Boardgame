@@ -34,4 +34,19 @@
   </div>
 <% } %>
 
+<% if (wishlistExpansions.length > 0) { %>
+  <h2 style="margin-top:32px;">Expansions</h2>
+  <p class="hint">Expansions you want for games you already have (or are also wishlisting).</p>
+  <div class="session-history-list">
+    <% wishlistExpansions.forEach(exp => { %>
+      <a class="session-history-card" href="/games/<%= exp.game_id %>#tab-expansions">
+        <div>
+          <strong><%= exp.name %></strong>
+          <div class="hint">for <%= exp.game_name %><% if (exp.play_time_minutes) { %> &middot; <%= exp.play_time_minutes %> min<% } %></div>
+        </div>
+      </a>
+    <% }) %>
+  </div>
+<% } %>
+
 <%- include('partials/foot') %>

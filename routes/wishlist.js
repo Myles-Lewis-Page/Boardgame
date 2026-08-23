@@ -19,7 +19,17 @@ router.get('/wishlist', asyncHandler(async (req, res) => {
   );
   const { rows: allCategories } = await pool.query('SELECT * FROM categories');
   const withPaths = wishlistGames.map(g => ({ ...g, category_path: pathForCategoryId(g.category_id, allCategories) }));
-  res.render('wishlist-index', { wishlistGames: withPaths });
+
+  // Wishlist expansions - unowned expansions of a game you (usually) already
+  // own, so they're kept separate from the game-wishlist grid above.
+  const { rows: wishlistExpansions } = await pool.query(
+    `SELECT e.*, g.name AS game_name
+     FROM expansions e JOIN games g ON g.id = e.game_id
+     WHERE e.owned = false
+     ORDER BY g.name ASC, e.name ASC`
+  );
+
+  res.render('wishlist-index', { wishlistGames: withPaths, wishlistExpansions });
 }));
 
 // Adding/viewing a wishlist entry is the same form/page as any other game -
