@@ -1,6 +1,6 @@
 <%- include('partials/head', { title: game.name }) %>
 
-<p><a href="/games">&larr; All games</a></p>
+<p><a href="<%= game.owned ? '/games' : '/wishlist' %>">&larr; <%= game.owned ? 'All games' : 'Wishlist' %></a></p>
 
 <div class="game-header-row">
   <% if (game.cover_image_url) { %>

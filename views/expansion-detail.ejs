@@ -1,6 +1,6 @@
 <%- include('partials/head', { title: expansion.name + ' - ' + game.name }) %>
 
-<p><a href="/games/<%= game.id %>">&larr; <%= game.name %></a> &middot; <a href="/games/<%= game.id %>#tab-expansions">Expansions</a></p>
+<p><a href="/games/<%= game.id %>">&larr; <%= game.name %></a> &middot; <a href="<%= expansion.owned ? '/expansions' : '/expansions/wishlist' %>"><%= expansion.owned ? 'My Expansions' : 'Wishlist Expansions' %></a></p>
 
 <div class="game-header">
   <h1><%= expansion.name %> <% if (!expansion.owned) { %><span class="badge badge-wishlist">wishlist</span><% } %></h1>
