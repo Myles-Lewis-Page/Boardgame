@@ -505,23 +505,6 @@ textarea { resize: vertical; }
 .setup-options-heading { margin: 0 0 10px; font-size: 1.1rem; }
 .setup-option-card { border-left: 3px solid var(--accent); }
 
-/* Cheat sheet page */
-.cheat-sheet-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
-.cheat-sheet-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-  margin: 16px 0;
-}
-.cheat-sheet-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-}
-.cheat-sheet-card h2 { margin: 0 0 10px; font-size: 1.05rem; }
-.cheat-sheet-body { white-space: pre-wrap; font-size: 1rem; line-height: 1.5; }
-
 /* Print label page */
 .print-label {
   border: 2px dashed var(--border);
@@ -826,3 +809,26 @@ textarea { resize: vertical; }
 @media (max-width: 640px) {
   .nav-search-input { width: 120px; }
 }
+
+/* ---- BGG search auto-fill ---- */
+.bgg-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px;
+}
+.bgg-result-row {
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--text);
+  cursor: pointer;
+  min-height: 40px;
+}
+.bgg-result-row:hover { background: var(--card-hover); }
