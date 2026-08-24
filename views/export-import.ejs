@@ -1,0 +1,35 @@
+<%- include('partials/head', { title: 'Export / Import' }) %>
+
+<h1>Export / Import</h1>
+<p class="hint">Back up your whole library - games, expansions, rules, house rules, setup options, and scoring categories - as a single JSON file, or restore from a previous export. Play history (past game sessions and scores) isn't included in this backup.</p>
+
+<div class="form-card">
+  <h3>Export</h3>
+  <p class="hint">Downloads a JSON file with everything in your library right now.</p>
+  <a href="/export" class="btn">Download Export</a>
+</div>
+
+<% if (result && result.error) { %>
+  <p class="empty" style="border: 1px solid var(--danger); padding: 12px; border-radius: var(--radius);"><%= result.error %></p>
+<% } %>
+
+<% if (result && result.summary) { %>
+  <div class="form-card">
+    <h3>Import Complete</h3>
+    <p><%= result.summary.gamesAdded %> game<%= result.summary.gamesAdded === 1 ? '' : 's' %> added, with <%= result.summary.expansionsAdded %> expansion<%= result.summary.expansionsAdded === 1 ? '' : 's' %>, <%= result.summary.sectionsAdded %> rule section<%= result.summary.sectionsAdded === 1 ? '' : 's' %>, <%= result.summary.houseRulesAdded %> house rule<%= result.summary.houseRulesAdded === 1 ? '' : 's' %>, <%= result.summary.setupOptionsAdded %> setup option<%= result.summary.setupOptionsAdded === 1 ? '' : 's' %>, and <%= result.summary.scoreCategoriesAdded %> score categor<%= result.summary.scoreCategoriesAdded === 1 ? 'y' : 'ies' %>.</p>
+    <% if (result.summary.gamesSkipped.length > 0) { %>
+      <p class="hint">Skipped (already in your library): <%= result.summary.gamesSkipped.join(', ') %></p>
+    <% } %>
+  </div>
+<% } %>
+
+<div class="form-card">
+  <h3>Import</h3>
+  <p class="hint">Paste the contents of a previously exported JSON file below. Games already in your library (matched by name) are skipped automatically - nothing gets overwritten.</p>
+  <form method="POST" action="/import">
+    <label>Exported JSON<textarea name="json_data" rows="10" placeholder="Paste the full contents of your export file here..." required></textarea></label>
+    <button type="submit" class="btn">Import</button>
+  </form>
+</div>
+
+<%- include('partials/foot') %>

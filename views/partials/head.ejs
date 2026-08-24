@@ -20,6 +20,7 @@
       <a href="/expansions/wishlist" class="btn btn-small btn-secondary">Wishlist Expansions</a>
       <a href="/randomizer" class="btn btn-small btn-secondary">What Should We Play?</a>
       <% if (locals.isAdmin) { %>
+        <a href="/export-import" class="btn btn-small btn-secondary">Backup</a>
         <a href="/games/import" class="btn btn-small btn-secondary">Import</a>
         <a href="/games/new" class="btn btn-small">+ Add Game</a>
         <form method="POST" action="/logout" class="inline-form">
