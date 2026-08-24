@@ -7,50 +7,69 @@
   <h1><%= game.name %> <span class="badge">cheat sheet</span></h1>
 </div>
 
-<% const hasAnyCheatContent = game.cheat_turn_order || game.cheat_scoring || game.cheat_win_condition; %>
-
-<% if (!hasAnyCheatContent && !isAdmin) { %>
-  <p class="empty">No cheat sheet written for this game yet.</p>
-<% } else { %>
-
 <div class="cheat-sheet-grid">
-  <div class="cheat-sheet-card">
-    <h2>🔄 Turn Order</h2>
-    <% if (game.cheat_turn_order) { %>
-      <div class="cheat-sheet-body"><%= game.cheat_turn_order %></div>
-    <% } else { %>
-      <p class="empty">Not written yet.</p>
-    <% } %>
-  </div>
-  <div class="cheat-sheet-card">
-    <h2>🏆 Scoring</h2>
-    <% if (game.cheat_scoring) { %>
-      <div class="cheat-sheet-body"><%= game.cheat_scoring %></div>
-    <% } else { %>
-      <p class="empty">Not written yet.</p>
-    <% } %>
-  </div>
-  <div class="cheat-sheet-card">
-    <h2>🎯 Win Condition</h2>
-    <% if (game.cheat_win_condition) { %>
-      <div class="cheat-sheet-body"><%= game.cheat_win_condition %></div>
-    <% } else { %>
-      <p class="empty">Not written yet.</p>
-    <% } %>
-  </div>
+  <% categories.forEach(cat => {
+    const entries = entriesByCategory[cat.key];
+    const legacyText = game[cat.legacyField];
+  %>
+    <div class="cheat-sheet-column">
+      <h2><%= cat.label %></h2>
+
+      <% if (entries.length === 0 && !legacyText) { %>
+        <div class="cheat-sheet-card"><p class="empty">Not written yet.</p></div>
+      <% } %>
+
+      <% entries.forEach(entry => { %>
+        <div class="cheat-sheet-card">
+          <% if (entry.label) { %><h3><%= entry.label %></h3><% } %>
+          <div class="cheat-sheet-body"><%= entry.body %></div>
+          <% if (isAdmin) { %>
+          <button class="btn btn-tiny" onclick="this.closest('.cheat-sheet-card').querySelector('.edit-form').classList.toggle('hidden')">Edit</button>
+          <form method="POST" action="/cheat-sheet-entries/<%= entry.id %>/delete" onsubmit="return confirm('Delete this card?')" class="inline-form">
+            <input type="hidden" name="gameId" value="<%= game.id %>">
+            <button type="submit" class="btn btn-tiny btn-danger">Delete</button>
+          </form>
+          <form class="edit-form hidden" method="POST" action="/cheat-sheet-entries/<%= entry.id %>/edit">
+            <input type="hidden" name="gameId" value="<%= game.id %>">
+            <label>Label (optional)<input type="text" name="label" value="<%= entry.label || '' %>"></label>
+            <label>Content<textarea name="body" rows="4"><%= entry.body %></textarea></label>
+            <button type="submit" class="btn btn-tiny">Save</button>
+          </form>
+          <% } %>
+        </div>
+      <% }) %>
+
+      <% if (legacyText) { %>
+        <div class="cheat-sheet-card">
+          <h3>Notes</h3>
+          <div class="cheat-sheet-body"><%= legacyText %></div>
+        </div>
+      <% } %>
+
+      <% if (isAdmin) { %>
+      <div class="form-card cheat-sheet-add-form">
+        <form method="POST" action="/games/<%= game.id %>/cheat-sheet/entries">
+          <input type="hidden" name="category" value="<%= cat.key %>">
+          <label>Label (optional - e.g. a faction name)<input type="text" name="label" placeholder="e.g. Eyrie Dynasties"></label>
+          <label>Content<textarea name="body" rows="4" required></textarea></label>
+          <button type="submit" class="btn btn-tiny">+ Add <%= cat.label %> Card</button>
+        </form>
+      </div>
+      <% } %>
+    </div>
+  <% }) %>
 </div>
-<% } %>
 
 <% if (isAdmin) { %>
 <div class="form-card">
-  <button class="btn btn-secondary" onclick="document.getElementById('edit-cheat-sheet').classList.toggle('hidden')">
-    <%= hasAnyCheatContent ? 'Edit Cheat Sheet' : '+ Write a Cheat Sheet' %>
+  <button class="btn btn-secondary" onclick="document.getElementById('edit-cheat-sheet-legacy').classList.toggle('hidden')">
+    Edit Notes (single fallback per category, for simple games)
   </button>
-  <form id="edit-cheat-sheet" method="POST" action="/games/<%= game.id %>/cheat-sheet" class="hidden">
-    <label>Turn Order<textarea name="cheat_turn_order" rows="4" placeholder="e.g. Clockwise. Each turn: roll, move, resolve, optionally build."><%= game.cheat_turn_order || '' %></textarea></label>
-    <label>Scoring<textarea name="cheat_scoring" rows="4" placeholder="e.g. 1pt per settlement, 2pt per city, +2 for Longest Road, +2 for Largest Army."><%= game.cheat_scoring || '' %></textarea></label>
-    <label>Win Condition<textarea name="cheat_win_condition" rows="3" placeholder="e.g. First to 10 victory points on your own turn."><%= game.cheat_win_condition || '' %></textarea></label>
-    <button type="submit" class="btn">Save Cheat Sheet</button>
+  <form id="edit-cheat-sheet-legacy" method="POST" action="/games/<%= game.id %>/cheat-sheet" class="hidden">
+    <label>Turn Order Notes<textarea name="cheat_turn_order" rows="4"><%= game.cheat_turn_order || '' %></textarea></label>
+    <label>Scoring Notes<textarea name="cheat_scoring" rows="4"><%= game.cheat_scoring || '' %></textarea></label>
+    <label>Win Condition Notes<textarea name="cheat_win_condition" rows="3"><%= game.cheat_win_condition || '' %></textarea></label>
+    <button type="submit" class="btn">Save Notes</button>
   </form>
 </div>
 <% } %>

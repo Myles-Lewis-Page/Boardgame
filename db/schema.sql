@@ -39,6 +39,22 @@ ALTER TABLE games ADD COLUMN IF NOT EXISTS cheat_turn_order TEXT;
 ALTER TABLE games ADD COLUMN IF NOT EXISTS cheat_scoring TEXT;
 ALTER TABLE games ADD COLUMN IF NOT EXISTS cheat_win_condition TEXT;
 
+-- Cheat sheet entries: each category (turn order / scoring / win
+-- condition) can have multiple entries, not just one - e.g. Root needs a
+-- separate Turn Order card per faction, since each plays completely
+-- differently. `label` is the card title (e.g. "Eyrie Dynasties");
+-- `body` is plain written content, filled in from the game's actual rules
+-- when the cheat sheet is built, not linked live to a rule_section row.
+CREATE TABLE IF NOT EXISTS cheat_sheet_entries (
+  id SERIAL PRIMARY KEY,
+  game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+  category TEXT NOT NULL CHECK (category IN ('turn_order', 'scoring', 'win_condition')),
+  label TEXT,
+  body TEXT NOT NULL,
+  sort_order INTEGER DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_cheat_sheet_entries_game ON cheat_sheet_entries(game_id);
+
 -- Expansions: each belongs to a parent game. Their rules (base + house)
 -- live in the same tables as the parent game's rules, scoped by expansion_id.
 CREATE TABLE IF NOT EXISTS expansions (
