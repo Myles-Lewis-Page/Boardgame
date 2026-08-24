@@ -139,4 +139,48 @@ router.post('/expansions/:id/delete', requireAuth, async (req, res) => {
   res.redirect(`/games/${gameId}#tab-expansions`);
 });
 
+// Clean, sequential print view of a single expansion's rules - same
+// treatment as the game-wide print route, just scoped to one expansion.
+router.get('/games/:gameId/expansions/:expId/print', asyncHandler(async (req, res) => {
+  const { gameId, expId } = req.params;
+  const { rows: expRows } = await pool.query('SELECT * FROM expansions WHERE id = $1 AND game_id = $2', [expId, gameId]);
+  if (!expRows.length) return res.status(404).send('Expansion not found');
+  const expansion = expRows[0];
+
+  const { rows: gameRows } = await pool.query('SELECT * FROM games WHERE id = $1', [gameId]);
+  if (!gameRows.length) return res.status(404).send('Game not found');
+  const game = gameRows[0];
+
+  const { rows: sections } = await pool.query(
+    'SELECT * FROM base_rule_sections WHERE expansion_id = $1 ORDER BY sort_order ASC, id ASC',
+    [expId]
+  );
+  const { rows: houseRules } = await pool.query(
+    'SELECT * FROM house_rules WHERE expansion_id = $1 AND is_active = true ORDER BY sort_order ASC, id ASC',
+    [expId]
+  );
+  const { rows: ruleCategories } = await pool.query(
+    'SELECT * FROM rule_categories WHERE expansion_id = $1 ORDER BY depth ASC, name ASC',
+    [expId]
+  );
+
+  const overridesBySection = new Map(houseRules.filter(h => h.base_section_id).map(h => [h.base_section_id, h]));
+  const extraHouseRules = houseRules.filter(h => !h.base_section_id);
+  const catTree = buildRuleCategoryTree(ruleCategories);
+  const sectionsByCategory = new Map();
+  sections.forEach(s => {
+    if (!s.rule_category_id) return;
+    if (!sectionsByCategory.has(s.rule_category_id)) sectionsByCategory.set(s.rule_category_id, []);
+    sectionsByCategory.get(s.rule_category_id).push(s);
+  });
+  const uncategorized = sections.filter(s => !s.rule_category_id).sort((a, b) => setupFirstWinningLastCompare(a.title, b.title));
+
+  const printSources = [{
+    key: 'exp', label: expansion.name, expansionId: expansion.id,
+    uncategorized, catTree, sectionsByCategory, overridesBySection, extraHouseRules
+  }];
+
+  res.render('game-print', { game: { id: game.id, name: `${game.name}: ${expansion.name}` }, printSources, backUrl: `/games/${game.id}/expansions/${expansion.id}` });
+}));
+
 module.exports = router;

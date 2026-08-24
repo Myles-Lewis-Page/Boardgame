@@ -1,0 +1,83 @@
+<%- include('partials/head', { title: q ? 'Search: ' + q : 'Search' }) %>
+
+<h1>Search</h1>
+
+<form method="GET" action="/search" class="row">
+  <input type="search" name="q" value="<%= q %>" placeholder="Search games, expansions, rules, house rules..." style="flex:1;">
+  <button type="submit" class="btn">Search</button>
+</form>
+
+<% if (!q) { %>
+  <p class="hint" style="margin-top:16px;">Type something above to search across your whole library - game names, expansion names, and rule text.</p>
+<% } else {
+  const totalResults = games.length + expansions.length + sections.length + houseRules.length;
+%>
+  <p class="hint" style="margin-top:16px;"><%= totalResults %> result<%= totalResults === 1 ? '' : 's' %> for "<%= q %>"</p>
+
+  <% if (totalResults === 0) { %>
+    <p class="empty">Nothing matched. Try a shorter or different term.</p>
+  <% } %>
+
+  <% if (games.length > 0) { %>
+    <h2>Games</h2>
+    <div class="session-history-list">
+      <% games.forEach(g => { %>
+        <a href="/games/<%= g.id %>" class="session-history-card">
+          <div>
+            <strong><%= g.name %></strong>
+            <% if (!g.owned) { %><span class="badge badge-wishlist">wishlist</span><% } %>
+            <div class="hint"><%= g.genre || '' %><% if (g.publisher) { %> &middot; <%= g.publisher %><% } %></div>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (expansions.length > 0) { %>
+    <h2>Expansions</h2>
+    <div class="session-history-list">
+      <% expansions.forEach(exp => { %>
+        <a href="/games/<%= exp.game_id %>/expansions/<%= exp.id %>" class="session-history-card">
+          <div>
+            <strong><%= exp.name %></strong>
+            <% if (!exp.owned) { %><span class="badge badge-wishlist">wishlist</span><% } %>
+            <div class="hint">for <%= exp.game_name %></div>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (sections.length > 0) { %>
+    <h2>Rules</h2>
+    <div class="session-history-list">
+      <% sections.forEach(s => { %>
+        <a href="<%= s.expansion_id ? '/games/' + s.game_id + '/expansions/' + s.expansion_id : '/games/' + s.game_id %>#section-<%= s.id %>" class="session-history-card">
+          <div>
+            <strong><%= s.title %></strong>
+            <div class="hint"><%= s.expansion_name ? s.expansion_name : s.game_name %><%= s.expansion_name ? ' (' + s.game_name + ')' : '' %></div>
+            <div class="notes"><%= s.excerpt %></div>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (houseRules.length > 0) { %>
+    <h2>House Rules</h2>
+    <div class="session-history-list">
+      <% houseRules.forEach(h => { %>
+        <a href="<%= h.expansion_id ? '/games/' + h.game_id + '/expansions/' + h.expansion_id : '/games/' + h.game_id + '#tab-house' %>" class="session-history-card">
+          <div>
+            <strong><%= h.title %></strong>
+            <% if (!h.is_active) { %><span class="badge">off</span><% } %>
+            <div class="hint"><%= h.expansion_name ? h.expansion_name : h.game_name %><%= h.expansion_name ? ' (' + h.game_name + ')' : '' %></div>
+            <div class="notes"><%= h.excerpt %></div>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+<% } %>
+
+<%- include('partials/foot') %>

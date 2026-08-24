@@ -1,0 +1,95 @@
+<%- include('partials/head', { title: 'Dashboard' }) %>
+
+<h1>Dashboard</h1>
+
+<div class="stat-cards">
+  <div class="stat-card">
+    <div class="stat-value"><%= totals.owned_games %></div>
+    <div class="stat-label">Owned Games</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value"><%= totals.total_plays %></div>
+    <div class="stat-label">Total Plays Logged</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value"><%= totals.plays_this_month %></div>
+    <div class="stat-label">Plays This Month</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value"><%= totals.owned_expansions %></div>
+    <div class="stat-label">Owned Expansions</div>
+  </div>
+</div>
+
+<h2>Most Played</h2>
+<% if (mostPlayed.length === 0) { %>
+  <p class="empty">No games played yet.</p>
+<% } else { %>
+  <div class="game-grid">
+    <% mostPlayed.forEach(g => { %>
+      <a class="game-card" href="/games/<%= g.id %>/sessions">
+        <% if (g.cover_image_url) { %>
+          <img class="box-art-thumb" src="<%= g.cover_image_url %>" alt="<%= g.name %> box art">
+        <% } else { %>
+          <div class="box-art-thumb box-art-placeholder"></div>
+        <% } %>
+        <h2><%= g.name %></h2>
+        <p class="meta"><%= g.play_count %> play<%= g.play_count == 1 ? '' : 's' %></p>
+      </a>
+    <% }) %>
+  </div>
+<% } %>
+
+<h2>Recent Activity</h2>
+<% if (recentSessions.length === 0) { %>
+  <p class="empty">Nothing played yet - start a game from any game's page.</p>
+<% } else { %>
+  <div class="session-history-list">
+    <% recentSessions.forEach(s => { %>
+      <a href="/sessions/<%= s.id %>" class="session-history-card">
+        <div>
+          <strong><%= s.game_name %></strong>
+          <% if (!s.finished_at) { %><span class="badge badge-wishlist">in progress</span><% } %>
+          <div class="hint"><%= new Date(s.started_at).toLocaleDateString() %></div>
+        </div>
+        <% if (s.winner_name) { %><div class="session-history-winner">🏆 <%= s.winner_name %></div><% } %>
+      </a>
+    <% }) %>
+  </div>
+<% } %>
+
+<% if (dueForReplay.length > 0) { %>
+<h2>Hasn't Hit the Table in a While</h2>
+<div class="game-grid">
+  <% dueForReplay.forEach(g => { %>
+    <a class="game-card" href="/games/<%= g.id %>">
+      <% if (g.cover_image_url) { %>
+        <img class="box-art-thumb" src="<%= g.cover_image_url %>" alt="<%= g.name %> box art">
+      <% } else { %>
+        <div class="box-art-thumb box-art-placeholder"></div>
+      <% } %>
+      <h2><%= g.name %></h2>
+      <p class="meta">Last played <%= new Date(g.last_played).toLocaleDateString() %></p>
+    </a>
+  <% }) %>
+</div>
+<% } %>
+
+<% if (neverPlayed.length > 0) { %>
+<h2>Never Played Yet</h2>
+<div class="game-grid">
+  <% neverPlayed.forEach(g => { %>
+    <a class="game-card" href="/games/<%= g.id %>/play/new">
+      <% if (g.cover_image_url) { %>
+        <img class="box-art-thumb" src="<%= g.cover_image_url %>" alt="<%= g.name %> box art">
+      <% } else { %>
+        <div class="box-art-thumb box-art-placeholder"></div>
+      <% } %>
+      <h2><%= g.name %></h2>
+      <p class="meta">Tap to start a game</p>
+    </a>
+  <% }) %>
+</div>
+<% } %>
+
+<%- include('partials/foot') %>

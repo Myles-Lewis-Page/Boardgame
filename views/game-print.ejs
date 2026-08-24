@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= game.name %> - Full Rules</title>
+  <style>
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      color: #1a1a1a;
+      background: #fff;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+      line-height: 1.55;
+    }
+    h1 { font-size: 1.8rem; margin-bottom: 4px; }
+    h2 {
+      font-size: 1.35rem;
+      margin-top: 40px;
+      border-bottom: 2px solid #333;
+      padding-bottom: 4px;
+    }
+    h3.print-category-header { font-size: 1.05rem; margin-top: 24px; color: #444; }
+    h4 { font-size: 1rem; margin-bottom: 4px; }
+    .print-section { margin-bottom: 16px; page-break-inside: avoid; }
+    .print-original-note { font-size: 0.85rem; color: #777; font-style: italic; }
+    .print-toolbar {
+      max-width: 780px;
+      margin: 0 auto 20px;
+      padding: 0 24px;
+      display: flex;
+      gap: 10px;
+    }
+    .print-toolbar button, .print-toolbar a {
+      font-family: system-ui, sans-serif;
+      font-size: 0.9rem;
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid #999;
+      background: #f0f0f0;
+      color: #1a1a1a;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .print-house-rules-heading { font-size: 0.95rem; color: #444; margin-top: 20px; }
+    @media print {
+      .print-toolbar { display: none; }
+      body { padding: 0 12px; }
+      h2 { break-before: page; }
+      h2:first-of-type { break-before: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="print-toolbar">
+    <a href="<%= backUrl %>">&larr; Back</a>
+    <button onclick="window.print()">Print / Save as PDF</button>
+  </div>
+
+  <h1><%= game.name %></h1>
+  <p>Full rulebook - base game<% if (printSources.length > 1) { %> plus owned expansions<% } %>.</p>
+
+  <% if (printSources.length === 0) { %>
+    <p>No rules added yet for this game.</p>
+  <% } %>
+
+  <% printSources.forEach(src => { %>
+    <h2><%= src.label %></h2>
+    <% src.uncategorized.forEach(s => {
+      const override = src.overridesBySection.get(s.id);
+    %>
+      <div class="print-section">
+        <h4><%= s.title %></h4>
+        <% if (override) { %>
+          <p><%= override.body %></p>
+          <p class="print-original-note">(House rule replaces the original text.)</p>
+        <% } else { %>
+          <p><%= s.body %></p>
+        <% } %>
+      </div>
+    <% }) %>
+    <% src.catTree.forEach(node => { %>
+      <%- include('partials/print-category-node', { node, sectionsByCategory: src.sectionsByCategory, overridesBySection: src.overridesBySection }) %>
+    <% }) %>
+    <% if (src.extraHouseRules.length > 0) { %>
+      <h3 class="print-house-rules-heading">House Rules</h3>
+      <% src.extraHouseRules.forEach(h => { %>
+        <div class="print-section">
+          <h4><%= h.title %></h4>
+          <p><%= h.body %></p>
+        </div>
+      <% }) %>
+    <% } %>
+  <% }) %>
+</body>
+</html>

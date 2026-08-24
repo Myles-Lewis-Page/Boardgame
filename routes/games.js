@@ -217,4 +217,59 @@ router.post('/:id/delete', requireAuth, asyncHandler(async (req, res) => {
   res.redirect('/games');
 }));
 
+// Clean, sequential print view of a game's full rulebook - base game plus
+// every owned expansion, in one document with no nav/buttons/forms. Active
+// house rule overrides are applied inline; active "extra" house rules are
+// appended per source. Wishlist expansions are left out, same as the
+// merged Rules tab.
+router.get('/:id/print', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { rows: gameRows } = await pool.query('SELECT * FROM games WHERE id = $1', [id]);
+  if (!gameRows.length) return res.status(404).send('Game not found');
+  const game = gameRows[0];
+
+  const { rows: expansions } = await pool.query(
+    'SELECT * FROM expansions WHERE game_id = $1 AND owned = true ORDER BY name ASC',
+    [id]
+  );
+  const ownedExpansionIds = expansions.map(e => e.id);
+
+  const { rows: allSections } = await pool.query(
+    'SELECT * FROM base_rule_sections WHERE game_id = $1 ORDER BY expansion_id NULLS FIRST, sort_order ASC, id ASC',
+    [id]
+  );
+  const { rows: allHouseRules } = await pool.query(
+    'SELECT * FROM house_rules WHERE game_id = $1 AND is_active = true ORDER BY expansion_id NULLS FIRST, sort_order ASC, id ASC',
+    [id]
+  );
+  const { rows: allRuleCategories } = await pool.query(
+    'SELECT * FROM rule_categories WHERE game_id = $1 ORDER BY depth ASC, name ASC',
+    [id]
+  );
+
+  const sources = [
+    { key: 'base', label: game.name, expansionId: null },
+    ...expansions.map(exp => ({ key: `exp-${exp.id}`, label: exp.name, expansionId: exp.id }))
+  ];
+
+  const printSources = sources.map(src => {
+    const sectionsForSrc = allSections.filter(s => src.expansionId === null ? s.expansion_id === null : s.expansion_id === src.expansionId);
+    const houseRulesForSrc = allHouseRules.filter(h => src.expansionId === null ? h.expansion_id === null : h.expansion_id === src.expansionId);
+    const overridesBySection = new Map(houseRulesForSrc.filter(h => h.base_section_id).map(h => [h.base_section_id, h]));
+    const extraHouseRules = houseRulesForSrc.filter(h => !h.base_section_id);
+    const catRowsForSrc = allRuleCategories.filter(c => src.expansionId === null ? c.expansion_id === null : c.expansion_id === src.expansionId);
+    const catTree = buildRuleCategoryTree(catRowsForSrc);
+    const sectionsByCategory = new Map();
+    sectionsForSrc.forEach(s => {
+      if (!s.rule_category_id) return;
+      if (!sectionsByCategory.has(s.rule_category_id)) sectionsByCategory.set(s.rule_category_id, []);
+      sectionsByCategory.get(s.rule_category_id).push(s);
+    });
+    const uncategorized = sectionsForSrc.filter(s => !s.rule_category_id).sort((a, b) => setupFirstWinningLastCompare(a.title, b.title));
+    return { ...src, uncategorized, catTree, sectionsByCategory, overridesBySection, extraHouseRules };
+  }).filter(src => src.uncategorized.length > 0 || src.catTree.length > 0 || src.extraHouseRules.length > 0);
+
+  res.render('game-print', { game, printSources, backUrl: `/games/${game.id}` });
+}));
+
 module.exports = router;

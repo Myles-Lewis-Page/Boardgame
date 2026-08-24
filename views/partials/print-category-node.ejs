@@ -1,0 +1,23 @@
+<%
+  // locals: node (category with .children), sectionsByCategory, overridesBySection
+  const secsHere = sectionsByCategory.get(node.id) || [];
+%>
+<div class="print-category" style="margin-left: <%= (node.depth - 1) * 18 %>px">
+  <h3 class="print-category-header"><%= node.name %></h3>
+  <% secsHere.forEach(s => {
+    const override = overridesBySection.get(s.id);
+  %>
+    <div class="print-section">
+      <h4><%= s.title %></h4>
+      <% if (override) { %>
+        <p><%= override.body %></p>
+        <p class="print-original-note">(House rule replaces the original text.)</p>
+      <% } else { %>
+        <p><%= s.body %></p>
+      <% } %>
+    </div>
+  <% }) %>
+  <% node.children.forEach(child => { %>
+    <%- include('print-category-node', { node: child, sectionsByCategory, overridesBySection }) %>
+  <% }) %>
+</div>

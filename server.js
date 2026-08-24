@@ -57,6 +57,8 @@ app.use('/', require('./routes/updateBoxArt'));
 app.use('/', require('./routes/linkVariants'));
 app.use('/', require('./routes/cheatSheet'));
 app.use('/', require('./routes/randomizer'));
+app.use('/', require('./routes/dashboard'));
+app.use('/', require('./routes/search'));
 app.use('/', require('./routes/scoring')); // must be mounted before games router so /games/:id/play, /scoring, /sessions don't hit games.js's /:id route
 app.use('/games', require('./routes/games'));
 app.use('/', require('./routes/baseRules'));
