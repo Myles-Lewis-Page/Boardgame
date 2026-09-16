@@ -7,10 +7,14 @@
     <input type="checkbox" name="owned" <%= defaultOwned ? 'checked' : '' %>>
     I own this (uncheck to add to the Wishlist instead)
   </label>
-  <label>Name<input type="text" name="name" required></label>
-  <label>Publisher<input type="text" name="publisher"></label>
+  <label>Name
+    <input type="text" name="name" id="bgg-name-input" autocomplete="off" required>
+  </label>
+  <div id="bgg-results" class="bgg-results" hidden></div>
+  <p id="bgg-status" class="hint" hidden></p>
+  <label>Publisher<input type="text" name="publisher" id="field-publisher"></label>
   <label>Genre
-    <input type="text" name="genre" list="genre-suggestions" placeholder="e.g. Strategy, Party, Cooperative">
+    <input type="text" name="genre" id="field-genre" list="genre-suggestions" placeholder="e.g. Strategy, Party, Cooperative">
     <datalist id="genre-suggestions">
       <option value="Strategy"><option value="Party"><option value="Cooperative">
       <option value="Card Game"><option value="Family"><option value="Worker Placement">
@@ -18,10 +22,10 @@
     </datalist>
   </label>
   <div class="row">
-    <label>Min players<input type="number" name="min_players" min="1"></label>
-    <label>Max players<input type="number" name="max_players" min="1"></label>
+    <label>Min players<input type="number" name="min_players" id="field-min-players" min="1"></label>
+    <label>Max players<input type="number" name="max_players" id="field-max-players" min="1"></label>
   </div>
-  <label>Play time (minutes)<input type="number" name="play_time_minutes" min="1" placeholder="e.g. 90"></label>
+  <label>Play time (minutes)<input type="number" name="play_time_minutes" id="field-play-time" min="1" placeholder="e.g. 90"></label>
   <label>Category (optional)
     <select name="category_id">
       <option value="">-- None --</option>
@@ -32,7 +36,7 @@
     <a href="/categories" class="hint">Manage categories</a>
   </label>
   <label>Box art URL
-    <input type="url" name="cover_image_url" placeholder="https://... (paste a link from BGG or Google Images)">
+    <input type="url" name="cover_image_url" id="field-cover-image" placeholder="https://... (paste a link from BGG or Google Images)">
   </label>
   <label>Variation of (optional)
     <select name="variant_of_id">
@@ -43,8 +47,149 @@
     </select>
     <span class="hint">Use this for a reskinned/retitled edition of a game you already have (e.g. a city-branded Monopoly). Its rules can stay separate or be copied over once added.</span>
   </label>
-  <label>Notes<textarea name="notes" rows="3"></textarea></label>
+  <label>Notes<textarea name="notes" id="field-notes" rows="3"></textarea></label>
   <button type="submit" class="btn">Add Game</button>
 </form>
+
+<style>
+  .bgg-results {
+    position: relative;
+    margin-top: -0.75rem;
+    margin-bottom: 1rem;
+    border: 1px solid #444;
+    border-radius: 4px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .bgg-result-item {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+  }
+  .bgg-result-item:hover,
+  .bgg-result-item.active {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .bgg-result-item + .bgg-result-item {
+    border-top: 1px solid #333;
+  }
+</style>
+
+<script>
+(function () {
+  var nameInput = document.getElementById('bgg-name-input');
+  var resultsBox = document.getElementById('bgg-results');
+  var statusEl = document.getElementById('bgg-status');
+  var debounceTimer = null;
+  var currentController = null;
+  var lastQuery = '';
+
+  function setStatus(text) {
+    if (!text) {
+      statusEl.hidden = true;
+      statusEl.textContent = '';
+      return;
+    }
+    statusEl.hidden = false;
+    statusEl.textContent = text;
+  }
+
+  function clearResults() {
+    resultsBox.innerHTML = '';
+    resultsBox.hidden = true;
+  }
+
+  function renderResults(results) {
+    resultsBox.innerHTML = '';
+    if (!results.length) {
+      clearResults();
+      return;
+    }
+    results.slice(0, 8).forEach(function (r) {
+      var item = document.createElement('div');
+      item.className = 'bgg-result-item';
+      item.tabIndex = 0;
+      item.textContent = r.year ? (r.name + ' (' + r.year + ')') : r.name;
+      item.addEventListener('click', function () { selectResult(r.id, r.name); });
+      item.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') selectResult(r.id, r.name);
+      });
+      resultsBox.appendChild(item);
+    });
+    resultsBox.hidden = false;
+  }
+
+  function selectResult(bggId, name) {
+    clearResults();
+    setStatus('Loading details for ' + name + '...');
+    fetch('/games/bgg-details/' + encodeURIComponent(bggId))
+      .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+      .then(function (result) {
+        if (!result.ok) {
+          setStatus(result.data.error || 'Could not load details from BGG.');
+          return;
+        }
+        var d = result.data;
+        nameInput.value = d.name || nameInput.value;
+        if (d.publisher) document.getElementById('field-publisher').value = d.publisher;
+        if (d.genre) document.getElementById('field-genre').value = d.genre;
+        if (d.min_players) document.getElementById('field-min-players').value = d.min_players;
+        if (d.max_players) document.getElementById('field-max-players').value = d.max_players;
+        if (d.play_time_minutes) document.getElementById('field-play-time').value = d.play_time_minutes;
+        if (d.cover_image_url) document.getElementById('field-cover-image').value = d.cover_image_url;
+        if (d.notes) document.getElementById('field-notes').value = d.notes;
+        setStatus('Filled in from BGG. Double-check before saving.');
+      })
+      .catch(function () {
+        setStatus('Something went wrong reaching BGG.');
+      });
+  }
+
+  function runSearch(query) {
+    if (currentController) currentController.abort();
+    currentController = new AbortController();
+    setStatus('Searching BGG...');
+    fetch('/games/bgg-search?q=' + encodeURIComponent(query), { signal: currentController.signal })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        setStatus('');
+        renderResults(data.results || []);
+      })
+      .catch(function (err) {
+        if (err.name === 'AbortError') return;
+        setStatus('Something went wrong reaching BGG.');
+      });
+  }
+
+  nameInput.addEventListener('input', function () {
+    var query = nameInput.value.trim();
+    lastQuery = query;
+    clearTimeout(debounceTimer);
+
+    // A pasted BGG URL or bare numeric id goes straight to details instead
+    // of a name search.
+    var urlMatch = query.match(/boardgamegeek\.com\/boardgame(?:expansion)?\/(\d+)/);
+    if (urlMatch) {
+      clearResults();
+      selectResult(urlMatch[1], query);
+      return;
+    }
+
+    if (query.length < 3) {
+      clearResults();
+      setStatus('');
+      return;
+    }
+
+    debounceTimer = setTimeout(function () {
+      if (nameInput.value.trim() === query) runSearch(query);
+    }, 400);
+  });
+
+  nameInput.addEventListener('blur', function () {
+    // Small delay so a click on a result registers before the dropdown closes.
+    setTimeout(clearResults, 150);
+  });
+})();
+</script>
 
 <%- include('partials/foot') %>
