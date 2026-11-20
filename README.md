@@ -1,5 +1,10 @@
 # Board Game Rules
 
+[![Live demo](https://img.shields.io/badge/Live%20demo-boardgame--production--8912.up.railway.app-2ea44f?style=for-the-badge)](https://boardgame-production-8912.up.railway.app)
+
+![Board game library](docs/games.jpg)
+
+
 Keep track of the board games you own, sort/filter them to decide what to
 play, and reference the official rules plus your own house rules for each
 one. Built for browsing on an iPad in the game room.
